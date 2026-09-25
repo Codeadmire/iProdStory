@@ -53,7 +53,7 @@ def run_crawler(job_id: str, start_url: str):
                 
                 page = context.new_page()
                 try:
-                    response = page.goto(current_url, wait_until="domcontentloaded", timeout=job.timeout)
+                    response = page.goto(current_url, wait_until="networkidle", timeout=job.timeout)
                     
                     if not response or response.status >= 400:
                         job.failed_pages += 1
@@ -72,18 +72,29 @@ def run_crawler(job_id: str, start_url: str):
                         db.commit()
                         continue
                     
-                    title = page.title()
-                    visible_text = page.locator("body").inner_text()
-                    
-                    # Extract page evidence
-                    meta_desc = page.evaluate("() => { const meta = document.querySelector('meta[name=\"description\"]'); return meta ? meta.content : null; }")
-                    h1s = page.locator("h1").all_inner_texts()
-                    h2s = page.locator("h2").all_inner_texts()
-                    nav_labels = page.locator("nav a").all_inner_texts()
-                    buttons = page.locator("button, a.button").all_inner_texts()
+                    try:
+                        title = page.title()
+                        visible_text = page.evaluate("() => document.body ? document.body.innerText : ''")
+                        
+                        # Extract page evidence
+                        meta_desc = page.evaluate("() => { const meta = document.querySelector('meta[name=\"description\"]'); return meta ? meta.content : null; }")
+                        h1s = page.locator("h1").all_inner_texts()
+                        h2s = page.locator("h2").all_inner_texts()
+                        nav_labels = page.locator("nav a").all_inner_texts()
+                        buttons = page.locator("button, a.button").all_inner_texts()
+                    except Exception as extract_err:
+                        print(f"Warning: Data extraction failed on {current_url}: {extract_err}")
+                        title = ""
+                        visible_text = ""
+                        meta_desc = None
+                        h1s, h2s, nav_labels, buttons = [], [], [], []
                     
                     screenshot_path = f"screenshots/{job_id}_{job.pages_processed}.png"
-                    page.screenshot(path=screenshot_path)
+                    try:
+                        page.screenshot(path=screenshot_path)
+                    except Exception as ss_err:
+                        print(f"Warning: Screenshot failed on {current_url}: {ss_err}")
+                        screenshot_path = ""
                     
                     # Save Page
                     crawled_page = models.CrawledPage(
