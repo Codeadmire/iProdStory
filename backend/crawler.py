@@ -4,12 +4,21 @@ import os
 import json
 from urllib.parse import urlparse
 from collections import deque
+import boto3
 import models
 from database import SessionLocal
 
 def normalize_url(url: str) -> str:
     parsed = urlparse(url)
     return f"{parsed.scheme}://{parsed.netloc}{parsed.path}".rstrip("/")
+
+s3_client = boto3.client(
+    's3',
+    endpoint_url=os.getenv("AWS_ENDPOINT_URL_S3"),
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.getenv("AWS_REGION", "us-east-2")
+)
 
 def is_same_domain(base_url: str, target_url: str) -> bool:
     base_netloc = urlparse(base_url).netloc
@@ -89,12 +98,24 @@ def run_crawler(job_id: str, start_url: str):
                         meta_desc = None
                         h1s, h2s, nav_labels, buttons = [], [], [], []
                     
-                    screenshot_path = f"screenshots/{job_id}_{job.pages_processed}.png"
+                    screenshot_key = f"{job_id}/{job.pages_processed}.png"
                     try:
-                        page.screenshot(path=screenshot_path)
+                        screenshot_bytes = page.screenshot()
+                        if os.getenv("AWS_ENDPOINT_URL_S3"):
+                            s3_client.put_object(
+                                Bucket="screenshots",
+                                Key=screenshot_key,
+                                Body=screenshot_bytes,
+                                ContentType="image/png"
+                            )
+                        else:
+                            # Local fallback
+                            os.makedirs(f"screenshots/{job_id}", exist_ok=True)
+                            with open(f"screenshots/{screenshot_key}", "wb") as f:
+                                f.write(screenshot_bytes)
                     except Exception as ss_err:
                         print(f"Warning: Screenshot failed on {current_url}: {ss_err}")
-                        screenshot_path = ""
+                        screenshot_key = ""
                     
                     # Save Page
                     crawled_page = models.CrawledPage(
@@ -119,7 +140,7 @@ def run_crawler(job_id: str, start_url: str):
                     screenshot = models.PageScreenshot(
                         product_id=job.product_id,
                         page_id=crawled_page.id,
-                        storage_key=screenshot_path,
+                        storage_key=screenshot_key,
                         viewport_width=1280,
                         viewport_height=800
                     )
