@@ -64,7 +64,7 @@ def run_crawler(job_id: str, start_url: str):
                             product_id=job.product_id,
                             url=norm_url,
                             parent_url=parent_url,
-                            status=response.status if response else 500,
+                            http_status=response.status if response else 500,
                             depth=depth,
                             error_message="HTTP Error"
                         )
@@ -108,7 +108,7 @@ def run_crawler(job_id: str, start_url: str):
                         nav_labels=json.dumps(nav_labels),
                         button_texts=json.dumps(buttons),
                         visible_text=visible_text[:2000],
-                        status=response.status,
+                        http_status=response.status,
                         depth=depth
                     )
                     db.add(crawled_page)
