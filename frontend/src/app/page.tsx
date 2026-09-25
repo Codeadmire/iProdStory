@@ -547,7 +547,7 @@ export default function Home() {
               {!isCompleted && !isFailed ? (
                 <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-10 shadow-xl border border-white/5 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-full h-1 bg-white/5">
-                    <div className="h-full bg-amber-500/10 border-l-2 border-amber-5000 transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }}></div>
+                    <div className="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-500 ease-out shadow-[0_0_15px_rgba(245,158,11,0.5)]" style={{ width: `${progressPercent}%` }}></div>
                   </div>
                   
                   <h2 className="text-2xl font-bold mb-1">Discovering Your Product</h2>
