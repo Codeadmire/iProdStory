@@ -12,6 +12,8 @@ from celery import Task
 from workers.celery_app import celery_app
 from database import SessionLocal
 import models
+from models import Product
+import crawler
 
 
 def _update_job(db, job_id: str, **kwargs):
@@ -50,8 +52,6 @@ def crawl_product(self, job_id: str, product_id: str, crawl_job_id: str):
     Crawls the product URL using Playwright, writes pages+screenshots to storage.
     Updates AsyncJob progress as it goes.
     """
-    import crawler   # Lazy import to avoid circular deps
-    from models import Product
     db = SessionLocal()
     try:
         _update_job(db, job_id,
