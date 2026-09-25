@@ -4,11 +4,13 @@ import { useRouter } from "next/navigation";
 import { BriefcaseBusiness, Check, RefreshCw, Save, ArrowLeft, Loader2 } from "lucide-react";
 
 
-async function fetchWithAuth(url: string, options: RequestInit = {}) {
+
+
+async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  const headers = { ...options.headers };
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string>) };
   if (token) headers["Authorization"] = `Bearer ${token}`;
-  return fetchWithAuth(url, { ...options, headers });
+  return fetch(url, { ...options, headers });
 }
 
 export default function ProductPageGenerator({ params }: { params: Promise<{ id: string }> }) {
