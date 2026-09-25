@@ -7,6 +7,7 @@ from collections import deque
 import boto3
 import models
 from database import SessionLocal
+from playwright_stealth import stealth_sync
 
 def normalize_url(url: str) -> str:
     parsed = urlparse(url)
@@ -71,6 +72,7 @@ def run_crawler(job_id: str, start_url: str):
                 print(f"Crawling: {current_url} at depth {depth}")
                 
                 page = context.new_page()
+                stealth_sync(page)
                 try:
                     response = page.goto(current_url, wait_until="networkidle", timeout=job.timeout)
                     
