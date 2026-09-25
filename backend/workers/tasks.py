@@ -14,6 +14,9 @@ from database import SessionLocal
 import models
 from models import Product
 import crawler
+import ai_service
+import media_service
+import campaign_service
 
 
 def _update_job(db, job_id: str, **kwargs):
@@ -88,7 +91,6 @@ def crawl_product(self, job_id: str, product_id: str, crawl_job_id: str):
 @celery_app.task(base=JobTask, bind=True, name="workers.tasks.analyze_product",
                  max_retries=2, default_retry_delay=60)
 def analyze_product(self, job_id: str, product_id: str, model_name: str):
-    import ai_service
     db = SessionLocal()
     try:
         _update_job(db, job_id, status="running",
@@ -113,7 +115,6 @@ def analyze_product(self, job_id: str, product_id: str, model_name: str):
 @celery_app.task(base=JobTask, bind=True, name="workers.tasks.generate_media",
                  max_retries=1, default_retry_delay=30)
 def generate_media(self, job_id: str, product_id: str):
-    import media_service
     db = SessionLocal()
     try:
         _update_job(db, job_id, status="running",
@@ -139,7 +140,6 @@ def generate_media(self, job_id: str, product_id: str):
 @celery_app.task(base=JobTask, bind=True, name="workers.tasks.generate_campaign",
                  max_retries=2, default_retry_delay=60)
 def generate_campaign(self, job_id: str, product_id: str, model_name: str):
-    import campaign_service
     db = SessionLocal()
     try:
         _update_job(db, job_id, status="running",
@@ -162,7 +162,6 @@ def generate_campaign(self, job_id: str, product_id: str, model_name: str):
 @celery_app.task(base=JobTask, bind=True, name="workers.tasks.generate_posts",
                  max_retries=2, default_retry_delay=60)
 def generate_posts(self, job_id: str, product_id: str, model_name: str, settings_dict: dict):
-    import campaign_service
     db = SessionLocal()
     try:
         _update_job(db, job_id, status="running",
@@ -187,7 +186,6 @@ def generate_posts(self, job_id: str, product_id: str, model_name: str, settings
 @celery_app.task(base=JobTask, bind=True, name="workers.tasks.generate_product_page",
                  max_retries=2, default_retry_delay=60)
 def generate_product_page(self, job_id: str, product_id: str, model_name: str):
-    import campaign_service
     db = SessionLocal()
     try:
         _update_job(db, job_id, status="running",
