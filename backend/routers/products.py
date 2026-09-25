@@ -72,7 +72,7 @@ class PostGenerationSettings(BaseModel):
 
 class JobAccepted(BaseModel):
     job_id: str
-    status: str = "queued"
+    status: str = "PENDING"
     message: str
 
 
