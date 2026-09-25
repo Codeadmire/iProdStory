@@ -86,7 +86,7 @@ export default function Home() {
     setJourneyStep('discover');
     setViewingDetails(false);
     try {
-      const prodRes = await fetch("/api/products", {
+      const prodRes = await fetchWithAuth("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
@@ -94,7 +94,7 @@ export default function Home() {
       const prodData = await prodRes.json();
       setProduct(prodData);
 
-      const crawlRes = await fetch(`/api/products/${prodData.id}/crawl`, {
+      const crawlRes = await fetchWithAuth(`/api/products/${prodData.id}/crawl`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ max_pages: maxPages, max_depth: maxDepth, timeout: 30000 })
@@ -109,17 +109,17 @@ export default function Home() {
   async function refreshDashboard() {
     if (!product || !crawlJob) return;
     try {
-      const jobRes = await fetch(`/api/crawls/${crawlJob.job_id || crawlJob.id}`);
+      const jobRes = await fetchWithAuth(`/api/crawls/${crawlJob.job_id || crawlJob.id}`);
       const jobData = await jobRes.json();
       setCrawlJob((prev: any) => ({ ...prev, ...jobData }));
 
-      const pagesRes = await fetch(`/api/products/${product.id}/pages`);
+      const pagesRes = await fetchWithAuth(`/api/products/${product.id}/pages`);
       setPages(await pagesRes.json());
 
-      const featsRes = await fetch(`/api/products/${product.id}/features`);
+      const featsRes = await fetchWithAuth(`/api/products/${product.id}/features`);
       setFeatures(await featsRes.json());
       
-      const exportRes = await fetch(`/api/crawls/${crawlJob.job_id || crawlJob.id}/export`);
+      const exportRes = await fetchWithAuth(`/api/crawls/${crawlJob.job_id || crawlJob.id}/export`);
       const exportData = await exportRes.json();
       setScreenshots(exportData.screenshots || []);
     } catch (e) {
@@ -148,14 +148,14 @@ export default function Home() {
     if (product) {
       try {
         // 1. Generate Media
-        const mediaResponse = await fetch(`/api/products/${product.id}/media`, { method: 'POST' });
+        const mediaResponse = await fetchWithAuth(`/api/products/${product.id}/media`, { method: 'POST' });
         const mediaData = await mediaResponse.json();
         if (mediaData.assets) {
           setMediaAssets(mediaData.assets);
         }
         
         // 2. Generate Campaign via LLM
-        const campaignResponse = await fetch(`/api/products/${product.id}/campaign`, { 
+        const campaignResponse = await fetchWithAuth(`/api/products/${product.id}/campaign`, { 
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: aiModel })
@@ -185,7 +185,7 @@ export default function Home() {
   const handleLinkedInPublish = async () => {
     if (!isLinkedInAuth) {
       try {
-        const res = await fetch(`/api/linkedin/auth/url`);
+        const res = await fetchWithAuth(`/api/linkedin/auth/url`);
         const data = await res.json();
         // Mock auth completion
         setIsLinkedInAuth(true);
@@ -196,7 +196,7 @@ export default function Home() {
     if (!product) return;
     setPublishStatus('publishing');
     try {
-      const res = await fetch(`/api/products/${product.id}/publish`, { method: 'POST' });
+      const res = await fetchWithAuth(`/api/products/${product.id}/publish`, { method: 'POST' });
       const data = await res.json();
       setPublishStatus('published');
       setPostUrl(data.linkedin_post_url);
@@ -209,7 +209,7 @@ export default function Home() {
     if (!product) return;
     setIsAnalyzingAI(true);
     try {
-      await fetch(`/api/products/${product.id}/analyze`, {
+      await fetchWithAuth(`/api/products/${product.id}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ model: aiModel })
@@ -217,7 +217,7 @@ export default function Home() {
       
       // Poll for modules
       const pollModules = setInterval(async () => {
-        const res = await fetch(`/api/products/${product.id}/modules`);
+        const res = await fetchWithAuth(`/api/products/${product.id}/modules`);
         const data = await res.json();
         if (data && data.length > 0) {
           setModules(data);
@@ -235,7 +235,7 @@ export default function Home() {
 
   const exportJSON = async () => {
     if (!crawlJob) return;
-    const res = await fetch(`/api/crawls/${crawlJob.job_id || crawlJob.id}/export`);
+    const res = await fetchWithAuth(`/api/crawls/${crawlJob.job_id || crawlJob.id}/export`);
     const data = await res.json();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const dlUrl = URL.createObjectURL(blob);
@@ -882,7 +882,7 @@ export default function Home() {
                         <button onClick={async () => {
                           if (campaignId) {
                             try {
-                              await fetch(`/api/campaigns/${campaignId}`, {
+                              await fetchWithAuth(`/api/campaigns/${campaignId}`, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(campaignData)

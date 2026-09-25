@@ -3,6 +3,14 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { BriefcaseBusiness, Check, RefreshCw, Save, ArrowLeft, Loader2 } from "lucide-react";
 
+
+async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const headers = { ...options.headers };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return fetchWithAuth(url, { ...options, headers });
+}
+
 export default function ProductPageGenerator({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const unwrappedParams = use(params);
@@ -19,7 +27,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
 
   const fetchProductPage = async () => {
     try {
-      const res = await fetch(`/api/products/${productId}/product-page`);
+      const res = await fetchWithAuth(`/api/products/${productId}/product-page`);
       if (res.ok) {
         const data = await res.json();
         setProductPage(data);
@@ -32,7 +40,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
   const generatePage = async () => {
     setIsGenerating(true);
     try {
-      const res = await fetch(`/api/products/${productId}/product-page`, {
+      const res = await fetchWithAuth(`/api/products/${productId}/product-page`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ model: "gemini-1.5-flash-latest" })
@@ -51,7 +59,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
     if (!productPage) return;
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/products/${productId}/product-page`, {
+      const res = await fetchWithAuth(`/api/products/${productId}/product-page`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...productPage, status })

@@ -3,6 +3,14 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { PenLine, RefreshCw, Save, ArrowLeft, Loader2, Check, X, Copy, Plus } from "lucide-react";
 
+
+async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const headers = { ...options.headers };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  return fetchWithAuth(url, { ...options, headers });
+}
+
 export default function PostsWorkspace({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const unwrappedParams = use(params);
@@ -31,7 +39,7 @@ export default function PostsWorkspace({ params }: { params: Promise<{ id: strin
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch(`/api/products/${productId}/posts`);
+      const res = await fetchWithAuth(`/api/products/${productId}/posts`);
       if (res.ok) {
         const data = await res.json();
         if (data && data.length > 0) {
@@ -47,7 +55,7 @@ export default function PostsWorkspace({ params }: { params: Promise<{ id: strin
   const generatePosts = async () => {
     setIsGenerating(true);
     try {
-      const res = await fetch(`/api/products/${productId}/posts/generate`, {
+      const res = await fetchWithAuth(`/api/products/${productId}/posts/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings)
@@ -67,7 +75,7 @@ export default function PostsWorkspace({ params }: { params: Promise<{ id: strin
   const savePosts = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/products/${productId}/posts`, {
+      const res = await fetchWithAuth(`/api/products/${productId}/posts`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(posts)
