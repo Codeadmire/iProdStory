@@ -50,18 +50,23 @@ def crawl_product(self, job_id: str, product_id: str, crawl_job_id: str):
     Crawls the product URL using Playwright, writes pages+screenshots to storage.
     Updates AsyncJob progress as it goes.
     """
-    from services import crawler_service   # Lazy import to avoid circular deps
+    import crawler   # Lazy import to avoid circular deps
+    from models import Product
     db = SessionLocal()
     try:
         _update_job(db, job_id,
                     status="running",
                     started_at=datetime.now(timezone.utc),
                     celery_task_id=self.request.id)
+        
+        product = db.query(Product).filter(Product.id == product_id).first()
+        if not product:
+            raise ValueError(f"Product {product_id} not found")
+            
+        start_url = product.base_url
         db.commit()
-        crawler_service.run_crawler(crawl_job_id=crawl_job_id,
-                                    product_id=product_id,
-                                    db=db,
-                                    progress_callback=lambda p: _update_job(db, job_id, progress=p))
+        
+        crawler.run_crawler(job_id=crawl_job_id, start_url=start_url)
         _update_job(db, job_id,
                     status="succeeded",
                     progress=100,
@@ -83,7 +88,7 @@ def crawl_product(self, job_id: str, product_id: str, crawl_job_id: str):
 @celery_app.task(base=JobTask, bind=True, name="workers.tasks.analyze_product",
                  max_retries=2, default_retry_delay=60)
 def analyze_product(self, job_id: str, product_id: str, model_name: str):
-    from services import ai_service
+    import ai_service
     db = SessionLocal()
     try:
         _update_job(db, job_id, status="running",
@@ -108,7 +113,7 @@ def analyze_product(self, job_id: str, product_id: str, model_name: str):
 @celery_app.task(base=JobTask, bind=True, name="workers.tasks.generate_media",
                  max_retries=1, default_retry_delay=30)
 def generate_media(self, job_id: str, product_id: str):
-    from services import media_service
+    import media_service
     db = SessionLocal()
     try:
         _update_job(db, job_id, status="running",
@@ -134,7 +139,7 @@ def generate_media(self, job_id: str, product_id: str):
 @celery_app.task(base=JobTask, bind=True, name="workers.tasks.generate_campaign",
                  max_retries=2, default_retry_delay=60)
 def generate_campaign(self, job_id: str, product_id: str, model_name: str):
-    from services import campaign_service
+    import campaign_service
     db = SessionLocal()
     try:
         _update_job(db, job_id, status="running",
@@ -157,7 +162,7 @@ def generate_campaign(self, job_id: str, product_id: str, model_name: str):
 @celery_app.task(base=JobTask, bind=True, name="workers.tasks.generate_posts",
                  max_retries=2, default_retry_delay=60)
 def generate_posts(self, job_id: str, product_id: str, model_name: str, settings_dict: dict):
-    from services import campaign_service
+    import campaign_service
     db = SessionLocal()
     try:
         _update_job(db, job_id, status="running",
@@ -182,7 +187,7 @@ def generate_posts(self, job_id: str, product_id: str, model_name: str, settings
 @celery_app.task(base=JobTask, bind=True, name="workers.tasks.generate_product_page",
                  max_retries=2, default_retry_delay=60)
 def generate_product_page(self, job_id: str, product_id: str, model_name: str):
-    from services import campaign_service
+    import campaign_service
     db = SessionLocal()
     try:
         _update_job(db, job_id, status="running",
