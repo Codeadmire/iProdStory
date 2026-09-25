@@ -1,24 +1,21 @@
 """
 JWT authentication utilities.
-- Password hashing with bcrypt
+- Password hashing with bcrypt (direct, avoids passlib Python 3.13 compat issues)
 - Access token creation and verification
-- No refresh token rotation yet (Phase 2 feature)
 """
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+import bcrypt
 import jwt
-from passlib.context import CryptContext
 from config import settings
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
+    return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 def create_access_token(user_id: str, workspace_id: Optional[str] = None) -> str:

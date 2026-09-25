@@ -4,7 +4,7 @@ All secrets and infra URLs live here — never hardcoded elsewhere.
 """
 from functools import lru_cache
 from typing import List
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -60,9 +60,7 @@ class Settings(BaseSettings):
     # ── Monitoring ────────────────────────────────────────────────────────
     SENTRY_DSN: str = ""
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
 
 @lru_cache

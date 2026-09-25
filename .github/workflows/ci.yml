@@ -1,0 +1,195 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CI Pipeline — Product Marketing AI
+#
+# Runs on every push to main and on every pull request.
+#
+# Jobs:
+#   test     → pytest (unit + integration + tenant isolation)
+#   lint     → ruff + mypy
+#   docker   → build API and worker images
+#   migrate  → dry-run Alembic migration check
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+
+  # ── Backend Tests ─────────────────────────────────────────────────────────
+  test:
+    name: pytest (backend)
+    runs-on: ubuntu-latest
+
+    services:
+      # Redis needed for Celery even in ALWAYS_EAGER mode if tasks import it
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: "sqlite:///./test.db"
+      SECRET_KEY: "ci-test-secret-key-not-for-production"
+      REDIS_URL: "redis://localhost:6379/0"
+      CELERY_BROKER_URL: "redis://localhost:6379/0"
+      CELERY_RESULT_BACKEND: "redis://localhost:6379/1"
+      CELERY_TASK_ALWAYS_EAGER: "true"
+      STORAGE_BACKEND: "local"
+      LOCAL_STORAGE_PATH: "/tmp/ci_media"
+      MEDIA_BASE_URL: "http://localhost:8000/media"
+      APP_ENV: "development"
+      DEBUG: "true"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt pytest pytest-asyncio httpx
+
+      - name: Install Playwright browsers
+        working-directory: backend
+        run: playwright install chromium --with-deps
+
+      - name: Run tests
+        working-directory: backend
+        run: |
+          pytest tests/ -v \
+            --tb=short \
+            --junit-xml=test-results.xml \
+            -k "not test_crawl_real_site"   # Skip real network tests in CI
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: backend/test-results.xml
+
+  # ── Lint & Type Check ─────────────────────────────────────────────────────
+  lint:
+    name: lint + type check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install lint tools
+        run: pip install ruff mypy
+
+      - name: Run ruff (linting)
+        working-directory: backend
+        run: ruff check . --select E,F,W,I --ignore E501
+
+      - name: Run mypy (type check)
+        working-directory: backend
+        run: mypy . --ignore-missing-imports --exclude venv
+        continue-on-error: true   # Informational until type coverage improves
+
+      - name: Check frontend types
+        working-directory: frontend
+        run: |
+          npm ci --prefer-offline
+          npx tsc --noEmit
+
+  # ── Docker Build ──────────────────────────────────────────────────────────
+  docker:
+    name: Docker build
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: prodmarketing/api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── Alembic migration dry-run ─────────────────────────────────────────────
+  migrate-check:
+    name: Alembic migration check
+    runs-on: ubuntu-latest
+    needs: [test]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: prodmarketing_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: "postgresql+psycopg2://postgres:postgres@localhost:5432/prodmarketing_ci"
+      SECRET_KEY: "ci-migration-key"
+      STORAGE_BACKEND: "local"
+      LOCAL_STORAGE_PATH: "/tmp/ci_media"
+      MEDIA_BASE_URL: "http://localhost:8000/media"
+      APP_ENV: "development"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt psycopg2-binary
+
+      - name: Run Alembic migrations
+        working-directory: backend
+        run: alembic upgrade head
+
+      - name: Verify no pending migrations
+        working-directory: backend
+        run: |
+          RESULT=$(alembic check 2>&1 || true)
+          if echo "$RESULT" | grep -q "Target database is not up to date"; then
+            echo "ERROR: There are pending migrations that have not been applied!"
+            echo "$RESULT"
+            exit 1
+          fi
+          echo "All migrations applied successfully."

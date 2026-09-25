@@ -2,17 +2,16 @@
 FastAPI application entry point.
 
 Initialises:
-  - Structured logging (stdout JSON in production)
+  - Structured JSON logging (human-readable in dev, JSON lines in production)
   - Sentry (if configured)
   - CORS from config (never wildcard in production)
   - Rate limiting via slowapi
+  - Request logging middleware
   - Static media files (local dev only — use CDN/S3 in production)
   - All API routers
   - Auto-creates DB tables (Alembic handles migrations in production)
 """
-import logging
 import os
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -22,15 +21,13 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from config import settings
+from utils.logging import configure_logging, get_logger, RequestLoggingMiddleware
 import database
 import models
 
-# ── Logging ───────────────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.DEBUG if settings.DEBUG else logging.INFO,
-    format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
-)
-logger = logging.getLogger(__name__)
+# ── Logging (must be first) ───────────────────────────────────────────────────
+configure_logging()
+logger = get_logger(__name__)
 
 # ── Sentry ────────────────────────────────────────────────────────────────────
 if settings.SENTRY_DSN:
@@ -55,6 +52,9 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# ── Request logging ───────────────────────────────────────────────────────────
+app.add_middleware(RequestLoggingMiddleware)
+
 # ── CORS ──────────────────────────────────────────────────────────────────────
 # Explicitly list allowed origins — never use allow_origins=["*"] in production
 app.add_middleware(
@@ -75,10 +75,12 @@ if settings.STORAGE_BACKEND == "local":
 from routers.auth_router import router as auth_router
 from routers.products import router as products_router
 from routers.jobs import router as jobs_router
+from routers.linkedin import router as linkedin_router
 
 app.include_router(auth_router)
 app.include_router(products_router)
 app.include_router(jobs_router)
+app.include_router(linkedin_router)
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
