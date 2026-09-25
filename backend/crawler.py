@@ -147,26 +147,29 @@ def run_crawler(job_id: str, start_url: str):
                     db.add(screenshot)
                     
                     # Basic extraction
-                    headings = page.locator("h1, h2").all_inner_texts()
-                    for heading in headings[:3]:
-                        if heading.strip():
-                            feature = models.Feature(
-                                product_id=job.product_id,
-                                name=heading.strip(),
-                                confidence="candidate"
-                            )
-                            db.add(feature)
-                            db.commit()
-                            db.refresh(feature)
-                            
-                            evidence = models.FeatureEvidence(
-                                feature_id=feature.id,
-                                page_id=crawled_page.id,
-                                evidence_text=heading.strip(),
-                                source="Heading"
-                            )
-                            db.add(evidence)
-                            job.features_detected += 1
+                    try:
+                        headings = page.locator("h1, h2").all_inner_texts()
+                        for heading in headings[:3]:
+                            if heading.strip():
+                                feature = models.Feature(
+                                    product_id=job.product_id,
+                                    name=heading.strip(),
+                                    confidence="candidate"
+                                )
+                                db.add(feature)
+                                db.commit()
+                                db.refresh(feature)
+                                
+                                evidence = models.FeatureEvidence(
+                                    feature_id=feature.id,
+                                    page_id=crawled_page.id,
+                                    evidence_text=heading.strip(),
+                                    source="Heading"
+                                )
+                                db.add(evidence)
+                                job.features_detected += 1
+                    except Exception as feature_err:
+                        print(f"Warning: Basic extraction failed on {current_url}: {feature_err}")
                     
                     job.pages_discovered += 1
                     job.screenshots_captured += 1
@@ -175,10 +178,13 @@ def run_crawler(job_id: str, start_url: str):
                     
                     # Find links for next depth
                     if depth < job.max_depth:
-                        hrefs = page.evaluate("() => Array.from(document.links).map(link => link.href)")
-                        for href in hrefs:
-                            if href and href.startswith("http") and is_same_domain(start_url, href):
-                                queue.append((href, depth + 1, norm_url))
+                        try:
+                            hrefs = page.evaluate("() => Array.from(document.links).map(link => link.href)")
+                            for href in hrefs:
+                                if href and href.startswith("http") and is_same_domain(start_url, href):
+                                    queue.append((href, depth + 1, norm_url))
+                        except Exception as link_err:
+                            print(f"Warning: Link extraction failed on {current_url}: {link_err}")
                                 
                 except Exception as inner_e:
                     print(f"Error crawling {current_url}: {inner_e}")
