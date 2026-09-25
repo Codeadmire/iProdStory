@@ -119,7 +119,7 @@ def run_crawler(job_id: str, start_url: str):
                     screenshot = models.PageScreenshot(
                         product_id=job.product_id,
                         page_id=crawled_page.id,
-                        image_path=screenshot_path,
+                        storage_key=screenshot_path,
                         viewport_width=1280,
                         viewport_height=800
                     )
