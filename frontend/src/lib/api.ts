@@ -2,7 +2,7 @@
  * Central API client.
  * All fetch calls go through here — never hardcode localhost in components.
  */
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 interface RequestOptions extends RequestInit {
   token?: string;

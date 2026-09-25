@@ -86,7 +86,7 @@ export default function Home() {
     setJourneyStep('discover');
     setViewingDetails(false);
     try {
-      const prodRes = await fetch("http://localhost:8000/api/products", {
+      const prodRes = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
@@ -94,7 +94,7 @@ export default function Home() {
       const prodData = await prodRes.json();
       setProduct(prodData);
 
-      const crawlRes = await fetch(`http://localhost:8000/api/products/${prodData.id}/crawl`, {
+      const crawlRes = await fetch(`/api/products/${prodData.id}/crawl`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ max_pages: maxPages, max_depth: maxDepth, timeout: 30000 })
@@ -109,17 +109,17 @@ export default function Home() {
   async function refreshDashboard() {
     if (!product || !crawlJob) return;
     try {
-      const jobRes = await fetch(`http://localhost:8000/api/crawls/${crawlJob.job_id || crawlJob.id}`);
+      const jobRes = await fetch(`/api/crawls/${crawlJob.job_id || crawlJob.id}`);
       const jobData = await jobRes.json();
       setCrawlJob((prev: any) => ({ ...prev, ...jobData }));
 
-      const pagesRes = await fetch(`http://localhost:8000/api/products/${product.id}/pages`);
+      const pagesRes = await fetch(`/api/products/${product.id}/pages`);
       setPages(await pagesRes.json());
 
-      const featsRes = await fetch(`http://localhost:8000/api/products/${product.id}/features`);
+      const featsRes = await fetch(`/api/products/${product.id}/features`);
       setFeatures(await featsRes.json());
       
-      const exportRes = await fetch(`http://localhost:8000/api/crawls/${crawlJob.job_id || crawlJob.id}/export`);
+      const exportRes = await fetch(`/api/crawls/${crawlJob.job_id || crawlJob.id}/export`);
       const exportData = await exportRes.json();
       setScreenshots(exportData.screenshots || []);
     } catch (e) {
@@ -148,14 +148,14 @@ export default function Home() {
     if (product) {
       try {
         // 1. Generate Media
-        const mediaResponse = await fetch(`http://localhost:8000/api/products/${product.id}/media`, { method: 'POST' });
+        const mediaResponse = await fetch(`/api/products/${product.id}/media`, { method: 'POST' });
         const mediaData = await mediaResponse.json();
         if (mediaData.assets) {
           setMediaAssets(mediaData.assets);
         }
         
         // 2. Generate Campaign via LLM
-        const campaignResponse = await fetch(`http://localhost:8000/api/products/${product.id}/campaign`, { 
+        const campaignResponse = await fetch(`/api/products/${product.id}/campaign`, { 
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: aiModel })
@@ -185,7 +185,7 @@ export default function Home() {
   const handleLinkedInPublish = async () => {
     if (!isLinkedInAuth) {
       try {
-        const res = await fetch(`http://localhost:8000/api/linkedin/auth/url`);
+        const res = await fetch(`/api/linkedin/auth/url`);
         const data = await res.json();
         // Mock auth completion
         setIsLinkedInAuth(true);
@@ -196,7 +196,7 @@ export default function Home() {
     if (!product) return;
     setPublishStatus('publishing');
     try {
-      const res = await fetch(`http://localhost:8000/api/products/${product.id}/publish`, { method: 'POST' });
+      const res = await fetch(`/api/products/${product.id}/publish`, { method: 'POST' });
       const data = await res.json();
       setPublishStatus('published');
       setPostUrl(data.linkedin_post_url);
@@ -209,7 +209,7 @@ export default function Home() {
     if (!product) return;
     setIsAnalyzingAI(true);
     try {
-      await fetch(`http://localhost:8000/api/products/${product.id}/analyze`, {
+      await fetch(`/api/products/${product.id}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ model: aiModel })
@@ -217,7 +217,7 @@ export default function Home() {
       
       // Poll for modules
       const pollModules = setInterval(async () => {
-        const res = await fetch(`http://localhost:8000/api/products/${product.id}/modules`);
+        const res = await fetch(`/api/products/${product.id}/modules`);
         const data = await res.json();
         if (data && data.length > 0) {
           setModules(data);
@@ -235,7 +235,7 @@ export default function Home() {
 
   const exportJSON = async () => {
     if (!crawlJob) return;
-    const res = await fetch(`http://localhost:8000/api/crawls/${crawlJob.job_id || crawlJob.id}/export`);
+    const res = await fetch(`/api/crawls/${crawlJob.job_id || crawlJob.id}/export`);
     const data = await res.json();
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const dlUrl = URL.createObjectURL(blob);
@@ -868,7 +868,7 @@ export default function Home() {
                          <p className="text-sm whitespace-pre-wrap text-white/90 mb-4">{post}</p>
                          {mediaAssets[idx % mediaAssets.length] && (
                            <div className="rounded-lg overflow-hidden border border-white/10">
-                             <img src={`http://localhost:8000/${mediaAssets[idx % mediaAssets.length]}`} className="w-full object-cover" />
+                             <img src={`/${mediaAssets[idx % mediaAssets.length]}`} className="w-full object-cover" />
                            </div>
                          )}
                       </div>
@@ -882,7 +882,7 @@ export default function Home() {
                         <button onClick={async () => {
                           if (campaignId) {
                             try {
-                              await fetch(`http://localhost:8000/api/campaigns/${campaignId}`, {
+                              await fetch(`/api/campaigns/${campaignId}`, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify(campaignData)
@@ -979,7 +979,7 @@ export default function Home() {
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           {mediaAssets.map((asset, i) => (
                             <div key={i} className="rounded-lg overflow-hidden border border-white/10 bg-white/[0.02] aspect-video relative group">
-                               <img src={`http://localhost:8000/${asset}`} className="w-full h-full object-cover" alt="Marketing Asset" />
+                               <img src={`/${asset}`} className="w-full h-full object-cover" alt="Marketing Asset" />
                             </div>
                           ))}
                         </div>
@@ -1023,7 +1023,7 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row justify-center gap-4">
                 <a 
-                  href={`http://localhost:8000/api/products/${product?.id}/export`}
+                  href={`/api/products/${product?.id}/export`}
                   download
                   className="bg-white/5 backdrop-blur-xl text-white font-light tracking-wide border border-white/20 hover:bg-white/[0.02] font-semibold px-8 py-4 rounded-xl transition-all shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2"
                 >
@@ -1186,10 +1186,10 @@ export default function Home() {
                           <div key={s.id} className="bg-white/5 backdrop-blur-xl rounded-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)] border border-white/5 overflow-hidden group">
                             <div 
                               className="aspect-video bg-white/5 relative overflow-hidden border-b border-white/5 cursor-pointer"
-                              onClick={() => setPreviewImage(`http://localhost:8000/${s.image_path}`)}
+                              onClick={() => setPreviewImage(`/${s.image_path}`)}
                             >
                               <div className="absolute inset-0 flex items-center justify-center text-white/40">
-                                 <img src={`http://localhost:8000/${s.image_path}`} alt="screenshot" className="object-cover w-full h-full hover:scale-105 transition-transform duration-500" onError={(e) => { e.currentTarget.style.display='none' }} />
+                                 <img src={`/${s.image_path}`} alt="screenshot" className="object-cover w-full h-full hover:scale-105 transition-transform duration-500" onError={(e) => { e.currentTarget.style.display='none' }} />
                               </div>
                             </div>
                             <div className="p-4">

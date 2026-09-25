@@ -76,11 +76,13 @@ from routers.auth_router import router as auth_router
 from routers.products import router as products_router
 from routers.jobs import router as jobs_router
 from routers.linkedin import router as linkedin_router
+from routers.crawls import router as crawls_router
 
 app.include_router(auth_router)
 app.include_router(products_router)
 app.include_router(jobs_router)
 app.include_router(linkedin_router)
+app.include_router(crawls_router)
 
 
 # ── Health ────────────────────────────────────────────────────────────────────

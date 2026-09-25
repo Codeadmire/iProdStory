@@ -31,7 +31,7 @@ export default function PostsWorkspace({ params }: { params: Promise<{ id: strin
 
   const fetchPosts = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/products/${productId}/posts`);
+      const res = await fetch(`/api/products/${productId}/posts`);
       if (res.ok) {
         const data = await res.json();
         if (data && data.length > 0) {
@@ -47,7 +47,7 @@ export default function PostsWorkspace({ params }: { params: Promise<{ id: strin
   const generatePosts = async () => {
     setIsGenerating(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/products/${productId}/posts/generate`, {
+      const res = await fetch(`/api/products/${productId}/posts/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings)
@@ -67,7 +67,7 @@ export default function PostsWorkspace({ params }: { params: Promise<{ id: strin
   const savePosts = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/products/${productId}/posts`, {
+      const res = await fetch(`/api/products/${productId}/posts`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(posts)

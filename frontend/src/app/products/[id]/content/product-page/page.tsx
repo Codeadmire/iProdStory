@@ -19,7 +19,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
 
   const fetchProductPage = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/products/${productId}/product-page`);
+      const res = await fetch(`/api/products/${productId}/product-page`);
       if (res.ok) {
         const data = await res.json();
         setProductPage(data);
@@ -32,7 +32,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
   const generatePage = async () => {
     setIsGenerating(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/products/${productId}/product-page`, {
+      const res = await fetch(`/api/products/${productId}/product-page`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ model: "gemini-1.5-flash-latest" })
@@ -51,7 +51,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
     if (!productPage) return;
     setIsSaving(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/products/${productId}/product-page`, {
+      const res = await fetch(`/api/products/${productId}/product-page`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...productPage, status })
