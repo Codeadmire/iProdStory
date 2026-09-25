@@ -4,6 +4,7 @@ All secrets and infra URLs live here — never hardcoded elsewhere.
 """
 from functools import lru_cache
 from typing import List
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,6 +21,14 @@ class Settings(BaseSettings):
 
     # ── Database ──────────────────────────────────────────────────────────
     DATABASE_URL: str = "postgresql+psycopg2://postgres:postgres@localhost:5432/prodmarketing"
+    DATABASE_URL_UNPOOLED: str = ""
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def fix_postgres_dialect(cls, v: str) -> str:
+        if v and v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql://", 1)
+        return v
 
     # ── Redis / Celery ────────────────────────────────────────────────────
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -60,7 +69,11 @@ class Settings(BaseSettings):
     # ── Monitoring ────────────────────────────────────────────────────────
     SENTRY_DSN: str = ""
 
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+    model_config = SettingsConfigDict(
+        env_file=(".env", "../.env.local", ".env.local"), 
+        case_sensitive=True,
+        extra="ignore"
+    )
 
 
 @lru_cache
