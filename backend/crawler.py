@@ -28,7 +28,7 @@ def run_crawler(job_id: str, start_url: str):
     
     try:
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=True, args=["--disable-dev-shm-usage", "--no-sandbox"])
             context = browser.new_context(
                 ignore_https_errors=True,
                 viewport={"width": 1280, "height": 800}
