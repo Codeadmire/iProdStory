@@ -6,12 +6,16 @@ import { PenLine, RefreshCw, Save, ArrowLeft, Loader2, Check, X, Copy, Plus } fr
 
 
 
+
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const workspaceId = typeof window !== "undefined" ? localStorage.getItem("workspace_id") : null;
   const headers: Record<string, string> = { ...(options.headers as Record<string, string>) };
   if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (workspaceId) headers["X-Workspace-Id"] = workspaceId;
   return fetch(url, { ...options, headers });
 }
+
 
 export default function PostsWorkspace({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
