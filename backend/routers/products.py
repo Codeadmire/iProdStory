@@ -164,7 +164,7 @@ def start_analysis(
 ):
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "ai_analyze")
-    analyze_task.delay(job_id=async_job.id, product_id=product_id, model_name=config.model)
+    analyze_task.delay(job_id=async_job.id, product_id=product_id, model_name=config.model.replace("-latest", ""))
     return JobAccepted(job_id=async_job.id, message="AI analysis queued")
 
 
@@ -242,7 +242,7 @@ def generate_campaign(
 ):
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "campaign_generate")
-    campaign_task.delay(job_id=async_job.id, product_id=product_id, model_name=config.model)
+    campaign_task.delay(job_id=async_job.id, product_id=product_id, model_name=config.model.replace("-latest", ""))
     return JobAccepted(job_id=async_job.id, message="Campaign generation queued")
 
 
@@ -284,7 +284,7 @@ def generate_posts(
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "posts_generate")
     posts_task.delay(job_id=async_job.id, product_id=product_id,
-                     model_name=body.model, settings_dict=body.dict())
+                     model_name=body.model.replace("-latest", ""), settings_dict=body.dict())
     return JobAccepted(job_id=async_job.id, message="Post generation queued")
 
 
@@ -319,7 +319,7 @@ def generate_product_page(
 ):
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "product_page_generate")
-    page_task.delay(job_id=async_job.id, product_id=product_id, model_name=config.model)
+    page_task.delay(job_id=async_job.id, product_id=product_id, model_name=config.model.replace("-latest", ""))
     return JobAccepted(job_id=async_job.id, message="Product page generation queued")
 
 
