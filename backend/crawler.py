@@ -33,8 +33,6 @@ def run_crawler(job_id: str, start_url: str):
                 ignore_https_errors=True,
                 viewport={"width": 1280, "height": 800}
             )
-            page = context.new_page()
-            
             os.makedirs("screenshots", exist_ok=True)
             
             while queue and job.pages_processed < job.max_pages:
@@ -53,6 +51,7 @@ def run_crawler(job_id: str, start_url: str):
                 
                 print(f"Crawling: {current_url} at depth {depth}")
                 
+                page = context.new_page()
                 try:
                     response = page.goto(current_url, wait_until="domcontentloaded", timeout=job.timeout)
                     
@@ -162,6 +161,11 @@ def run_crawler(job_id: str, start_url: str):
                     )
                     db.add(crawled_page)
                     db.commit()
+                finally:
+                    try:
+                        page.close()
+                    except Exception:
+                        pass
                     
             if job.failed_pages > 0:
                 job.status = "COMPLETED_WITH_WARNINGS"
