@@ -164,7 +164,14 @@ def start_analysis(
 ):
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "ai_analyze")
-    analyze_task.delay(job_id=async_job.id, product_id=product_id, model_name=config.model.replace("-latest", ""))
+    
+    actual_model = config.model
+    if "gemini-1.5-flash" in actual_model:
+        actual_model = "gemini-3.8-flash"
+    elif "gemini-1.5-pro" in actual_model:
+        actual_model = "gemini-3.1-pro"
+        
+    analyze_task.delay(job_id=async_job.id, product_id=product_id, model_name=actual_model)
     return JobAccepted(job_id=async_job.id, message="AI analysis queued")
 
 
@@ -242,7 +249,14 @@ def generate_campaign(
 ):
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "campaign_generate")
-    campaign_task.delay(job_id=async_job.id, product_id=product_id, model_name=config.model.replace("-latest", ""))
+    
+    actual_model = config.model
+    if "gemini-1.5-flash" in actual_model:
+        actual_model = "gemini-3.8-flash"
+    elif "gemini-1.5-pro" in actual_model:
+        actual_model = "gemini-3.1-pro"
+        
+    campaign_task.delay(job_id=async_job.id, product_id=product_id, model_name=actual_model)
     return JobAccepted(job_id=async_job.id, message="Campaign generation queued")
 
 
@@ -283,8 +297,15 @@ def generate_posts(
 ):
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "posts_generate")
+    
+    actual_model = body.model
+    if "gemini-1.5-flash" in actual_model:
+        actual_model = "gemini-3.8-flash"
+    elif "gemini-1.5-pro" in actual_model:
+        actual_model = "gemini-3.1-pro"
+        
     posts_task.delay(job_id=async_job.id, product_id=product_id,
-                     model_name=body.model.replace("-latest", ""), settings_dict=body.dict())
+                     model_name=actual_model, settings_dict=body.dict())
     return JobAccepted(job_id=async_job.id, message="Post generation queued")
 
 
@@ -319,7 +340,14 @@ def generate_product_page(
 ):
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "product_page_generate")
-    page_task.delay(job_id=async_job.id, product_id=product_id, model_name=config.model.replace("-latest", ""))
+    
+    actual_model = config.model
+    if "gemini-1.5-flash" in actual_model:
+        actual_model = "gemini-3.8-flash"
+    elif "gemini-1.5-pro" in actual_model:
+        actual_model = "gemini-3.1-pro"
+        
+    page_task.delay(job_id=async_job.id, product_id=product_id, model_name=actual_model)
     return JobAccepted(job_id=async_job.id, message="Product page generation queued")
 
 
