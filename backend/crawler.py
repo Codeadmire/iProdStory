@@ -36,6 +36,9 @@ def run_crawler(job_id: str, start_url: str):
     visited = set()
     queue = deque([(start_url, 0, None)]) # (url, depth, parent_url)
     
+    job.status = "RUNNING"
+    db.commit()
+    
     try:
         with sync_playwright() as p:
             # Hide the headless browser signature

@@ -29,7 +29,7 @@ def get_crawl_job(
         
     return {
         "job_id": async_job.id,
-        "status": async_job.status,
+        "status": crawl_job.status,
         "current_url": crawl_job.current_url,
         "pages_processed": crawl_job.pages_processed,
         "max_pages": crawl_job.max_pages,
@@ -41,5 +41,24 @@ def export_crawl_job(
     job_id: str,
     db: Session = Depends(get_db),
 ):
-    # Dummy implementation for export endpoint
-    return {"message": "Export completed"}
+    async_job = db.query(models.AsyncJob).filter(models.AsyncJob.id == job_id).first()
+    if not async_job:
+        raise HTTPException(status_code=404, detail="Async Job not found")
+        
+    crawl_job = db.query(models.CrawlJob).filter(
+        models.CrawlJob.product_id == async_job.product_id
+    ).order_by(models.CrawlJob.created_at.desc()).first()
+    
+    if not crawl_job:
+        return {"screenshots": []}
+        
+    screenshots = db.query(models.PageScreenshot).filter(
+        models.PageScreenshot.product_id == crawl_job.product_id
+    ).all()
+    
+    screenshot_list = [
+        {"storage_key": s.storage_key, "page_id": s.page_id} 
+        for s in screenshots if s.storage_key
+    ]
+    
+    return {"screenshots": screenshot_list}
