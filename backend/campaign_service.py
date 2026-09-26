@@ -42,13 +42,17 @@ def generate_campaign(product_id: str, db: Session, model_name: str = "gemini-3.
             }}
             Generate exactly 3 posts.
             """
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                ),
-            )
+            from tenacity import retry, stop_after_attempt, wait_exponential
+            @retry(stop=stop_after_attempt(10), wait=wait_exponential(multiplier=1, min=2, max=10))
+            def _call_ai():
+                return client.models.generate_content(
+                    model=model_name,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                    ),
+                )
+            response = _call_ai()
             text = response.text
             data = json.loads(text)
         except Exception as e:
@@ -103,7 +107,7 @@ def get_campaign_dict(campaign, db):
         "id": campaign.id,
         "headline": campaign.headline,
         "about": campaign.about,
-        "posts": [{"id": p.id, "topic": p.topic, "hook": p.hook, "body": p.body, "cta": p.cta, "hashtags": p.hashtags, "status": p.status} for p in posts]
+        "posts": [p.body for p in posts]
     }
 
 def generate_linkedin_posts(product_id: str, db: Session, model_name: str, settings: dict):

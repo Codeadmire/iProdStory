@@ -50,14 +50,20 @@ def analyze_product_features(product_id: str, db: Session, model_name: str = "ge
         
     client = genai.Client(api_key=api_key)
     
-    try:
-        response = client.models.generate_content(
+    from tenacity import retry, stop_after_attempt, wait_exponential
+    
+    @retry(stop=stop_after_attempt(10), wait=wait_exponential(multiplier=1, min=2, max=10))
+    def _call_ai():
+        return client.models.generate_content(
             model=model_name,
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
             ),
         )
+    
+    try:
+        response = _call_ai()
         data = json.loads(response.text)
         process_ai_result(data, product_id, db)
     except Exception as e:
