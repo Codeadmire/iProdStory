@@ -53,7 +53,7 @@ def generate_campaign(product_id: str, db: Session, model_name: str = "gemini-1.
             data = json.loads(text)
         except Exception as e:
             print(f"Error generating campaign: {e}")
-            data = get_mock_campaign(product)
+            raise
     else:
         print("No GEMINI_API_KEY found, using mock campaign data.")
         data = get_mock_campaign(product)
@@ -145,8 +145,8 @@ def generate_linkedin_posts(product_id: str, db: Session, model_name: str, setti
             )
             posts_data = json.loads(response.text)
         except Exception as e:
-            print("Error generating posts", e)
-            posts_data = [{"topic": "Launch", "hook": "Check out our new product!", "body": "It's great.", "cta": "Try it today.", "hashtags": "#launch"}]
+            print(f"Error generating posts: {e}")
+            raise
     else:
         posts_data = [{"topic": "Launch", "hook": "Check out our new product!", "body": "It's great.", "cta": "Try it today.", "hashtags": "#launch"}]
         
@@ -225,13 +225,7 @@ def generate_linkedin_product_page(product_id: str, db: Session, model_name: str
             data = json.loads(text)
         except Exception as e:
             print(f"Error generating product page: {e}")
-            data = {
-                "name": "StockFlow",
-                "tagline": "Modern inventory management.",
-                "description": "Manage your stock with ease.",
-                "target_audience": "Business Owners",
-                "highlights": "• Real-time stock\n• Easy ordering"
-            }
+            raise
     else:
         data = {
             "name": "StockFlow",

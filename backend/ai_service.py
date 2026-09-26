@@ -62,8 +62,7 @@ def analyze_product_features(product_id: str, db: Session, model_name: str = "ge
         process_ai_result(data, product_id, db)
     except Exception as e:
         print(f"AI API Error: {e}")
-        # fallback to mock
-        mock_analyze_features(product_id, db, product.base_url)
+        raise
 
 def process_ai_result(data: dict, product_id: str, db: Session):
     # First delete old modules for idempotency
