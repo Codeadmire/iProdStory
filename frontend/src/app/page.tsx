@@ -64,7 +64,7 @@ export default function Home() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [maxPages, setMaxPages] = useState(50);
   const [maxDepth, setMaxDepth] = useState(3);
-  const [aiModel, setAiModel] = useState("gemini-1.5-flash-latest");
+  const [aiModel, setAiModel] = useState("gemini-1.5-flash");
   
   // Data States
   const [product, setProduct] = useState<any>(null);
@@ -84,7 +84,7 @@ export default function Home() {
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (crawlJob && (crawlJob.status === "Started" || crawlJob.status === "RUNNING" || crawlJob.status === "PENDING")) {
+    if (crawlJob && (crawlJob.status === "Started" || crawlJob.status === "RUNNING" || crawlJob.status === "PENDING" || crawlJob.status === "QUEUED" || crawlJob.status === "queued")) {
       interval = setInterval(() => {
         refreshDashboard();
       }, 2000);
@@ -530,7 +530,7 @@ export default function Home() {
                         value={aiModel}
                         onChange={(e) => setAiModel(e.target.value)}
                       >
-                        <option value="gemini-1.5-flash-latest">Gemini 1.5 Flash (Fast)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast)</option>
                         <option value="gemini-1.5-pro-latest">Gemini 1.5 Pro (Quality)</option>
                         <option value="gemini-exp-1114">Gemini Exp 1114</option>
                       </select>

@@ -61,14 +61,14 @@ class CrawlConfig(BaseModel):
     timeout: int = 30_000
 
 class AIConfig(BaseModel):
-    model: str = "gemini-1.5-flash-latest"
+    model: str = "gemini-1.5-flash"
 
 class PostGenerationSettings(BaseModel):
     num_posts: int = 3
     tone: str = "Professional B2B"
     audience: str = "Business Owners"
     content_types: List[str] = ["Product launch"]
-    model: str = "gemini-1.5-flash-latest"
+    model: str = "gemini-1.5-flash"
 
 class JobAccepted(BaseModel):
     job_id: str
@@ -132,7 +132,7 @@ def start_crawl(
 
     crawl_job = models.CrawlJob(
         product_id=product_id,
-        status="QUEUED",
+        status="PENDING",
         max_pages=config.max_pages,
         max_depth=config.max_depth,
         timeout=config.timeout,

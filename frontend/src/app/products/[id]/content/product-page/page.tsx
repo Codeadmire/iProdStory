@@ -49,7 +49,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
       const res = await fetchWithAuth(`/api/products/${productId}/product-page`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gemini-1.5-flash-latest" })
+        body: JSON.stringify({ model: "gemini-1.5-flash" })
       });
       if (res.ok) {
         const data = await res.json();
