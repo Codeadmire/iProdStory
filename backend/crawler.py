@@ -77,7 +77,7 @@ def run_crawler(job_id: str, start_url: str):
                 page = context.new_page()
                 stealth_sync(page)
                 try:
-                    response = page.goto(current_url, wait_until="networkidle", timeout=job.timeout)
+                    response = page.goto(current_url, wait_until="domcontentloaded", timeout=job.timeout)
                     
                     if not response or response.status >= 400:
                         job.failed_pages += 1
@@ -113,15 +113,15 @@ def run_crawler(job_id: str, start_url: str):
                         meta_desc = None
                         h1s, h2s, nav_labels, buttons = [], [], [], []
                     
-                    screenshot_key = f"{job_id}/{job.pages_processed}.png"
+                    screenshot_key = f"{job_id}/{job.pages_processed}.jpg"
                     try:
-                        screenshot_bytes = page.screenshot()
+                        screenshot_bytes = page.screenshot(type="jpeg", quality=60)
                         if os.getenv("AWS_ENDPOINT_URL_S3"):
                             s3_client.put_object(
                                 Bucket="screenshots",
                                 Key=screenshot_key,
                                 Body=screenshot_bytes,
-                                ContentType="image/png"
+                                ContentType="image/jpeg"
                             )
                         else:
                             # Local fallback
