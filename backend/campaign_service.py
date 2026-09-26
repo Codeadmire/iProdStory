@@ -78,7 +78,8 @@ def generate_campaign(product_id: str, db: Session, model_name: str = "gemini-3.
     for p_content in data.get("posts", []):
         db_post = models.CampaignPost(
             campaign_id=new_campaign.id,
-            content=p_content
+            body=p_content,
+            topic="Campaign Post"
         )
         db.add(db_post)
         
