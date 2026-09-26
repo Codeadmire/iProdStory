@@ -85,7 +85,7 @@ class PostGenerationSettings(BaseModel):
     tone: str = "Professional B2B"
     audience: str = "Business Owners"
     content_types: List[str] = ["Product launch", "Feature", "Educational"]
-    model: str = "gemini-3.1-pro"
+    model: str = "gemini-1.5-flash-002"
 
 class CampaignUpdate(BaseModel):
     headline: str
@@ -102,7 +102,7 @@ class CampaignResponse(BaseModel):
         from_attributes = True
 
 class AIModelConfig(BaseModel):
-    model: str = "gemini-3.1-pro"
+    model: str = "gemini-1.5-flash-002"
 
 class ProductPageBase(BaseModel):
     name: str

@@ -61,14 +61,14 @@ class CrawlConfig(BaseModel):
     timeout: int = 30_000
 
 class AIConfig(BaseModel):
-    model: str = "gemini-3.1-pro"
+    model: str = "gemini-1.5-flash-002"
 
 class PostGenerationSettings(BaseModel):
     num_posts: int = 3
     tone: str = "Professional B2B"
     audience: str = "Business Owners"
     content_types: List[str] = ["Product launch"]
-    model: str = "gemini-3.1-pro"
+    model: str = "gemini-1.5-flash-002"
 
 class JobAccepted(BaseModel):
     job_id: str
@@ -165,7 +165,7 @@ def start_analysis(
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "ai_analyze")
     
-    actual_model = "gemini-3.1-pro"
+    actual_model = "gemini-1.5-flash-002"
         
     analyze_task.delay(job_id=async_job.id, product_id=product_id, model_name=actual_model)
     return JobAccepted(job_id=async_job.id, message="AI analysis queued")
@@ -246,7 +246,7 @@ def generate_campaign(
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "campaign_generate")
     
-    actual_model = "gemini-3.1-pro"
+    actual_model = "gemini-1.5-flash-002"
         
     campaign_task.delay(job_id=async_job.id, product_id=product_id, model_name=actual_model)
     return JobAccepted(job_id=async_job.id, message="Campaign generation queued")
@@ -290,7 +290,7 @@ def generate_posts(
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "posts_generate")
     
-    actual_model = "gemini-3.1-pro"
+    actual_model = "gemini-1.5-flash-002"
         
     posts_task.delay(job_id=async_job.id, product_id=product_id,
                      model_name=actual_model, settings_dict=body.dict())
@@ -329,7 +329,7 @@ def generate_product_page(
     _require_product(product_id, ctx.workspace.id, db)
     async_job = _create_job(db, ctx.workspace.id, product_id, "product_page_generate")
     
-    actual_model = "gemini-3.1-pro"
+    actual_model = "gemini-1.5-flash-002"
         
     page_task.delay(job_id=async_job.id, product_id=product_id, model_name=actual_model)
     return JobAccepted(job_id=async_job.id, message="Product page generation queued")
