@@ -47,7 +47,7 @@ class Settings(BaseSettings):
 
     # ── AI ────────────────────────────────────────────────────────────────
     GEMINI_API_KEY: str = ""
-    DEFAULT_AI_MODEL: str = "gemini-1.5-flash-002"
+    DEFAULT_AI_MODEL: str = "gemini-3.8-flash"
 
     # ── LinkedIn OAuth ────────────────────────────────────────────────────
     LINKEDIN_CLIENT_ID: str = ""
