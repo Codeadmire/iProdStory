@@ -83,7 +83,7 @@ def generate_marketing_media(product_id: str, db: Session):
     generated_assets = []
     
     for idx, ev in enumerate(evidence):
-        original_path = ev.image_path # e.g. screenshots/xxx.png
+        original_path = ev.storage_key # e.g. screenshots/xxx.png
         output_filename = f"marketing_{product_id}_{idx}.png"
         
         # Generate the beautiful composite

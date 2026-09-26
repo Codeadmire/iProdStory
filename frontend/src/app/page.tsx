@@ -723,51 +723,70 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 bg-[length:200%_auto] animate-[gradient_2s_linear_infinite] rounded-3xl p-10 text-white shadow-xl mb-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 -mt-10 -mr-10 opacity-20">
-                  <svg width="200" height="200" viewBox="0 0 200 200" fill="none"><circle cx="100" cy="100" r="100" fill="currentColor"/></svg>
-                </div>
+              <div className="bg-[#0f1115]/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-10 text-white shadow-[0_8px_30px_rgb(0,0,0,0.6)] mb-8 relative overflow-hidden group hover:border-amber-500/30 transition-colors duration-500">
+                {/* Subtle background glow effect */}
+                <div className="absolute -top-32 -right-32 w-96 h-96 bg-amber-500/10 blur-[100px] rounded-full group-hover:bg-amber-500/20 transition-colors duration-500"></div>
+                <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-500/10 blur-[100px] rounded-full"></div>
+                
                 <div className="relative z-10 text-center">
-                  <h3 className="text-3xl font-bold mb-4">✨ Create Complete LinkedIn Campaign</h3>
-                  <p className="text-blue-100 mb-8 max-w-lg mx-auto text-lg">Product Page • Posts • Content</p>
+                  <div className="inline-flex items-center justify-center p-3 bg-amber-500/10 rounded-2xl mb-6 border border-amber-500/20 text-amber-400">
+                    <span className="text-3xl">✨</span>
+                  </div>
+                  <h3 className="text-3xl font-bold mb-3 tracking-tight">Create Complete LinkedIn Campaign</h3>
+                  <p className="text-white/60 mb-10 max-w-lg mx-auto text-lg">Product Page • Posts • Content</p>
                   
                   {isGeneratingCampaign ? (
-                    <div className="bg-white/5 backdrop-blur-xl/10 rounded-2xl p-6 text-left max-w-md mx-auto backdrop-blur-sm border border-white/20">
-                      <h4 className="font-bold mb-4">Creating your campaign...</h4>
-                      <ul className="space-y-3 text-sm">
-                        <li className="flex items-center gap-3"><span className="text-green-300">✓</span> Understanding product positioning</li>
-                        <li className="flex items-center gap-3"><span className="text-green-300 animate-pulse">●</span> Creating LinkedIn Product Page</li>
-                        <li className="flex items-center gap-3 text-white/50"><span className="text-white/30">○</span> Writing launch posts</li>
-                        <li className="flex items-center gap-3 text-white/50"><span className="text-white/30">○</span> Preparing campaign</li>
+                    <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl p-8 text-left max-w-md mx-auto shadow-inner">
+                      <h4 className="font-semibold mb-6 flex items-center gap-3 text-lg">
+                        <div className="w-5 h-5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                        Creating your campaign...
+                      </h4>
+                      <ul className="space-y-4 text-sm text-white/70">
+                        <li className="flex items-center gap-3"><span className="text-green-400">✓</span> Understanding product positioning</li>
+                        <li className="flex items-center gap-3"><span className="text-amber-400 animate-pulse">●</span> Creating LinkedIn Product Page</li>
+                        <li className="flex items-center gap-3 text-white/40"><span className="text-white/20">○</span> Writing launch posts</li>
+                        <li className="flex items-center gap-3 text-white/40"><span className="text-white/20">○</span> Preparing campaign</li>
                       </ul>
                     </div>
                   ) : (
-                    <div className="max-w-xl mx-auto bg-white/5 backdrop-blur-xl/10 rounded-2xl p-6 backdrop-blur-sm border border-white/20 text-left mb-6">
-                      <h4 className="font-bold mb-4">Campaign Settings</h4>
-                      <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                    <div className="max-w-xl mx-auto bg-black/40 backdrop-blur-md rounded-2xl p-8 border border-white/10 text-left mb-6 shadow-inner relative">
+                      <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent rounded-2xl pointer-events-none"></div>
+                      <h4 className="font-semibold mb-6 text-lg text-white/90">Campaign Settings</h4>
+                      <div className="grid grid-cols-2 gap-6 text-sm mb-8">
                         <div>
-                          <label className="block text-blue-200 text-xs mb-1">Target audience</label>
-                          <select className="w-full bg-white/5 backdrop-blur-xl/20 border border-white/10 rounded-lg p-2 text-white outline-none">
-                            <option className="text-white font-light tracking-wide">Business Owners</option>
-                            <option className="text-white font-light tracking-wide">Marketing Managers</option>
-                            <option className="text-white font-light tracking-wide">Developers</option>
-                          </select>
+                          <label className="block text-white/60 text-xs mb-2 uppercase tracking-wider font-semibold">Target audience</label>
+                          <div className="relative">
+                            <select className="w-full bg-white/5 border border-white/10 rounded-xl p-3.5 text-white/90 outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all appearance-none cursor-pointer">
+                              <option className="bg-[#0f1115] text-white">Business Owners</option>
+                              <option className="bg-[#0f1115] text-white">Marketing Managers</option>
+                              <option className="bg-[#0f1115] text-white">Developers</option>
+                            </select>
+                            <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-white/50">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                          </div>
                         </div>
                         <div>
-                          <label className="block text-blue-200 text-xs mb-1">Campaign goal</label>
-                          <select className="w-full bg-white/5 backdrop-blur-xl/20 border border-white/10 rounded-lg p-2 text-white outline-none">
-                            <option className="text-white font-light tracking-wide">Product awareness</option>
-                            <option className="text-white font-light tracking-wide">Lead generation</option>
-                            <option className="text-white font-light tracking-wide">Product launch</option>
-                          </select>
+                          <label className="block text-white/60 text-xs mb-2 uppercase tracking-wider font-semibold">Campaign goal</label>
+                          <div className="relative">
+                            <select className="w-full bg-white/5 border border-white/10 rounded-xl p-3.5 text-white/90 outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all appearance-none cursor-pointer">
+                              <option className="bg-[#0f1115] text-white">Product awareness</option>
+                              <option className="bg-[#0f1115] text-white">Lead generation</option>
+                              <option className="bg-[#0f1115] text-white">Product launch</option>
+                            </select>
+                            <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-white/50">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       
                       <button 
                         onClick={startCampaignGeneration}
-                        className="w-full bg-white/5 backdrop-blur-xl text-amber-400 hover:bg-white/[0.02] font-bold px-8 py-4 rounded-xl transition-all shadow-lg text-lg"
+                        className="w-full bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold px-8 py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] text-lg flex items-center justify-center gap-2"
                       >
-                        [ Create Campaign → ]
+                        Create Campaign
+                        <span className="text-xl font-normal">→</span>
                       </button>
                     </div>
                   )}
