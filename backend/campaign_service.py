@@ -6,7 +6,7 @@ from google import genai
 from google.genai import types
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-def generate_campaign(product_id: str, db: Session, model_name: str = "gemini-3.8-flash"):
+def generate_campaign(product_id: str, db: Session, model_name: str = "gemini-3.5-flash"):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         return None
@@ -185,7 +185,7 @@ def generate_linkedin_posts(product_id: str, db: Session, model_name: str, setti
         for p in created_posts
     ]
 
-def generate_linkedin_product_page(product_id: str, db: Session, model_name: str = "gemini-3.8-flash"):
+def generate_linkedin_product_page(product_id: str, db: Session, model_name: str = "gemini-3.5-flash"):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         return None

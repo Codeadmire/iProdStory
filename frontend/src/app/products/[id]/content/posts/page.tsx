@@ -34,7 +34,7 @@ export default function PostsWorkspace({ params }: { params: Promise<{ id: strin
     tone: "Professional B2B",
     audience: "Business Owners",
     content_types: ["Product launch"],
-    model: "gemini-3.8-flash"
+    model: "gemini-3.5-flash"
   });
 
   const CONTENT_TYPE_OPTIONS = ["Product launch", "Feature", "Problem/Solution", "Educational", "Business benefit", "Product capability"];

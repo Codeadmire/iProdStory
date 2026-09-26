@@ -8,7 +8,7 @@ import models
 from google import genai
 from google.genai import types
 
-def analyze_product_features(product_id: str, db: Session, model_name: str = "gemini-3.8-flash"):
+def analyze_product_features(product_id: str, db: Session, model_name: str = "gemini-3.5-flash"):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         return
