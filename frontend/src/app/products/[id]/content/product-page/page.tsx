@@ -53,7 +53,26 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
       });
       if (res.ok) {
         const data = await res.json();
-        setProductPage(data);
+        const jobId = data.job_id;
+        if (jobId) {
+          let isDone = false;
+          while (!isDone) {
+            await new Promise(r => setTimeout(r, 2000));
+            const jobRes = await fetchWithAuth(`/api/jobs/${jobId}`);
+            if (jobRes.ok) {
+              const jobData = await jobRes.json();
+              if (jobData.status === "succeeded") {
+                isDone = true;
+                await fetchProductPage();
+              } else if (jobData.status === "failed") {
+                console.error("Job failed:", jobData.error);
+                isDone = true;
+              }
+            } else {
+              isDone = true; // Stop polling on error
+            }
+          }
+        }
       }
     } catch (e) {
       console.error(e);
