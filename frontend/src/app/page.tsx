@@ -203,7 +203,7 @@ export default function Home() {
           const jobRes = await fetchWithAuth(`/api/jobs/${campaignJob.job_id}`);
           if (!jobRes.ok) continue;
           const jobStatus = await jobRes.json();
-          if (jobStatus.status === 'COMPLETED' || jobStatus.status === 'FAILED') {
+          if (jobStatus.status === 'succeeded' || jobStatus.status === 'failed' || jobStatus.status === 'COMPLETED' || jobStatus.status === 'FAILED') {
             isDone = true;
           }
         }
