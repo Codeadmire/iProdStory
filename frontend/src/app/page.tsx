@@ -95,6 +95,7 @@ export default function Home() {
   const [screenshots, setScreenshots] = useState<ScreenshotData[]>([]);
   const [modules, setModules] = useState<any[]>([]);
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
+  const [analysisStatusMsg, setAnalysisStatusMsg] = useState('✨ Analyze With AI');
   
   // Journey States
   const [journeyStepState, setJourneyStepState] = useState<JourneyStep>('home');
@@ -269,22 +270,39 @@ export default function Home() {
   const startAiAnalysis = async () => {
     if (!product) return;
     setIsAnalyzingAI(true);
+    setAnalysisStatusMsg('✨ Analyzing (takes ~5s)...');
     try {
-      await fetchWithAuth(`/api/products/${product.id}/analyze`, {
+      const res = await fetchWithAuth(`/api/products/${product.id}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ model: aiModel })
       });
+      const analysisJob = await res.json();
       
-      // Poll for modules
+      // Poll for job status & modules
       const pollModules = setInterval(async () => {
-        const res = await fetchWithAuth(`/api/products/${product.id}/modules`);
-        const data = await res.json();
+        // Check if modules are ready
+        const modRes = await fetchWithAuth(`/api/products/${product.id}/modules`);
+        const data = await modRes.json();
         if (data && data.length > 0) {
           setModules(data);
           clearInterval(pollModules);
           setIsAnalyzingAI(false);
           setJourneyStep('create');
+          return;
+        }
+
+        // Otherwise check job status for rate limit errors
+        if (analysisJob && analysisJob.job_id) {
+          const jobRes = await fetchWithAuth(`/api/jobs/${analysisJob.job_id}`);
+          if (jobRes.ok) {
+            const jobData = await jobRes.json();
+            if (jobData.status === 'failed') {
+              setAnalysisStatusMsg('✨ API Rate Limit Hit. Retrying in background...');
+            } else if (jobData.status === 'running') {
+              setAnalysisStatusMsg('✨ Analyzing (processing)...');
+            }
+          }
         }
       }, 3000);
       
@@ -766,7 +784,7 @@ export default function Home() {
                     disabled={isAnalyzingAI}
                     className={`${isAnalyzingAI ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600 border border-amber-400/30 shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] hover:border-amber-300/50 transition-all duration-300 group'} text-white font-semibold px-8 py-3 rounded-xl transition-all shadow-[0_8px_30px_-4px_rgba(0,0,0,0.6)] w-full relative overflow-hidden`}
                   >
-                    <span className="relative z-10">{isAnalyzingAI ? '✨ Analyzing (takes ~5s)...' : '✨ Analyze With AI'}</span>
+                    <span className="relative z-10">{isAnalyzingAI ? analysisStatusMsg : '✨ Analyze With AI'}</span>
                     {!isAnalyzingAI && <div className="absolute inset-0 bg-amber-500/10 border-l-2 border-amber-5000/20 w-full h-full transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>}
                   </button>
                   <p className="text-xs font-bold text-amber-500 uppercase tracking-widest mt-4">Phase 2 Active</p>
