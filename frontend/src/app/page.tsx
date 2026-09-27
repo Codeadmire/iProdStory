@@ -1239,10 +1239,10 @@ export default function Home() {
                           <div key={s.id} className="bg-white/5 backdrop-blur-xl rounded-xl shadow-[0_4px_20px_-2px_rgba(0,0,0,0.5)] border border-white/5 overflow-hidden group">
                             <div 
                               className="aspect-video bg-white/5 relative overflow-hidden border-b border-white/5 cursor-pointer"
-                              onClick={() => setPreviewImage(`/${s.image_path}`)}
+                              onClick={() => setPreviewImage(s.image_path.startsWith('http') ? s.image_path : `/${s.image_path}`)}
                             >
                               <div className="absolute inset-0 flex items-center justify-center text-white/40">
-                                 <img src={`/${s.image_path}`} alt="screenshot" className="object-cover w-full h-full hover:scale-105 transition-transform duration-500" onError={(e) => { e.currentTarget.style.display='none' }} />
+                                 <img src={s.image_path.startsWith('http') ? s.image_path : `/${s.image_path}`} alt="screenshot" className="object-cover w-full h-full hover:scale-105 transition-transform duration-500" onError={(e) => { e.currentTarget.style.display='none' }} />
                               </div>
                             </div>
                             <div className="p-4">

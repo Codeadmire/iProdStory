@@ -78,9 +78,11 @@ class S3StorageBackend(StorageBackend):
         return self.get_url(key)
 
     def get_url(self, key: str) -> str:
-        if self._endpoint:
-            return f"{self._endpoint}/{self.bucket}/{key}"
-        return f"https://{self.bucket}.s3.{self.region}.amazonaws.com/{key}"
+        return self.client.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': self.bucket, 'Key': key},
+            ExpiresIn=3600
+        )
 
     def delete(self, key: str) -> None:
         self.client.delete_object(Bucket=self.bucket, Key=key)

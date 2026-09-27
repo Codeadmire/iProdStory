@@ -56,9 +56,34 @@ def export_crawl_job(
         models.PageScreenshot.product_id == crawl_job.product_id
     ).all()
     
-    screenshot_list = [
-        {"storage_key": s.storage_key, "page_id": s.page_id} 
-        for s in screenshots if s.storage_key
-    ]
+    import os
+    
+    screenshot_list = []
+    if os.getenv("AWS_ENDPOINT_URL_S3"):
+        import boto3
+        s3_client = boto3.client(
+            "s3",
+            endpoint_url=os.getenv("AWS_ENDPOINT_URL_S3"),
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+            region_name="us-east-1"
+        )
+        for s in screenshots:
+            if s.storage_key:
+                presigned = s3_client.generate_presigned_url(
+                    'get_object',
+                    Params={'Bucket': 'screenshots', 'Key': s.storage_key},
+                    ExpiresIn=3600
+                )
+                screenshot_list.append({
+                    "image_path": presigned,
+                    "page_id": str(s.page_id),
+                    "id": str(s.id)
+                })
+    else:
+        screenshot_list = [
+            {"image_path": f"screenshots/{s.storage_key}", "page_id": str(s.page_id), "id": str(s.id)} 
+            for s in screenshots if s.storage_key
+        ]
     
     return {"screenshots": screenshot_list}

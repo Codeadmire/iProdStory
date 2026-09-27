@@ -70,6 +70,10 @@ _media_path = settings.LOCAL_STORAGE_PATH
 if settings.STORAGE_BACKEND == "local":
     os.makedirs(_media_path, exist_ok=True)
     app.mount("/media", StaticFiles(directory=_media_path), name="media")
+    
+    # Mount screenshots directory
+    os.makedirs("screenshots", exist_ok=True)
+    app.mount("/screenshots", StaticFiles(directory="screenshots"), name="screenshots")
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 from routers.auth_router import router as auth_router
