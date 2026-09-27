@@ -56,6 +56,10 @@ def run_crawler(job_id: str, start_url: str):
                 viewport={"width": 1280, "height": 800},
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             )
+            
+            # Block unnecessary resources to massively speed up crawling
+            context.route("**/*", lambda route: route.abort() if route.request.resource_type in ["font", "media", "websocket"] or any(x in route.request.url for x in ["google-analytics", "doubleclick", "facebook.net", "tracker"]) else route.continue_())
+            
             os.makedirs("screenshots", exist_ok=True)
             
             while queue and job.pages_processed < job.max_pages:
@@ -113,24 +117,32 @@ def run_crawler(job_id: str, start_url: str):
                         meta_desc = None
                         h1s, h2s, nav_labels, buttons = [], [], [], []
                     
-                    screenshot_key = f"{job_id}/{job.pages_processed}.jpg"
-                    try:
-                        screenshot_bytes = page.screenshot(type="jpeg", quality=60)
-                        if os.getenv("AWS_ENDPOINT_URL_S3"):
-                            s3_client.put_object(
-                                Bucket="screenshots",
-                                Key=screenshot_key,
-                                Body=screenshot_bytes,
-                                ContentType="image/jpeg"
-                            )
-                        else:
-                            # Local fallback
-                            os.makedirs(f"screenshots/{job_id}", exist_ok=True)
-                            with open(f"screenshots/{screenshot_key}", "wb") as f:
-                                f.write(screenshot_bytes)
-                    except Exception as ss_err:
-                        print(f"Warning: Screenshot failed on {current_url}: {ss_err}")
-                        screenshot_key = ""
+                    existing_screenshot = db.query(models.PageScreenshot).join(models.CrawledPage).filter(
+                        models.CrawledPage.product_id == job.product_id,
+                        models.CrawledPage.url == norm_url
+                    ).first()
+                    
+                    if existing_screenshot:
+                        screenshot_key = existing_screenshot.storage_key
+                    else:
+                        screenshot_key = f"{job_id}/{job.pages_processed}.jpg"
+                        try:
+                            screenshot_bytes = page.screenshot(type="jpeg", quality=60)
+                            if os.getenv("AWS_ENDPOINT_URL_S3"):
+                                s3_client.put_object(
+                                    Bucket="screenshots",
+                                    Key=screenshot_key,
+                                    Body=screenshot_bytes,
+                                    ContentType="image/jpeg"
+                                )
+                            else:
+                                # Local fallback
+                                os.makedirs(f"screenshots/{job_id}", exist_ok=True)
+                                with open(f"screenshots/{screenshot_key}", "wb") as f:
+                                    f.write(screenshot_bytes)
+                        except Exception as ss_err:
+                            print(f"Warning: Screenshot failed on {current_url}: {ss_err}")
+                            screenshot_key = ""
                     
                     # Save Page
                     crawled_page = models.CrawledPage(

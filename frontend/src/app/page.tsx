@@ -57,13 +57,26 @@ export default function Home() {
       setIsAuthenticated(true);
     }
     setIsAuthChecking(false);
+
+    // Restore state from sessionStorage if returning from another page
+    const savedProductId = sessionStorage.getItem("activeProductId");
+    if (savedProductId) {
+      fetchWithAuth(`/api/products/${savedProductId}`).then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          setProduct(data.product);
+          if (data.crawl_job) setCrawlJob(data.crawl_job);
+          setJourneyStep(sessionStorage.getItem("journeyStep") as any || 'review');
+        }
+      });
+    }
   }, []);
 
   // App States
   const [url, setUrl] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [maxPages, setMaxPages] = useState(50);
-  const [maxDepth, setMaxDepth] = useState(3);
+  const [maxPages, setMaxPages] = useState(15);
+  const [maxDepth, setMaxDepth] = useState(2);
   const [aiModel, setAiModel] = useState("gemini-3.5-flash");
   
   // Data States
@@ -76,7 +89,12 @@ export default function Home() {
   const [isAnalyzingAI, setIsAnalyzingAI] = useState(false);
   
   // Journey States
-  const [journeyStep, setJourneyStep] = useState<JourneyStep>('home');
+  const [journeyStepState, setJourneyStepState] = useState<JourneyStep>('home');
+  const journeyStep = journeyStepState;
+  const setJourneyStep = (step: JourneyStep) => {
+    setJourneyStepState(step);
+    if (typeof window !== "undefined") sessionStorage.setItem("journeyStep", step);
+  };
   const [viewingDetails, setViewingDetails] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [pageSearch, setPageSearch] = useState("");
@@ -98,6 +116,7 @@ export default function Home() {
   const analyzeProduct = async () => {
     if (!url) return;
     setJourneyStep('discover');
+    sessionStorage.setItem('journeyStep', 'discover');
     setViewingDetails(false);
     try {
       const prodRes = await fetchWithAuth("/api/products", {
@@ -107,6 +126,7 @@ export default function Home() {
       });
       const prodData = await prodRes.json();
       setProduct(prodData);
+      sessionStorage.setItem('activeProductId', prodData.id);
 
       const crawlRes = await fetchWithAuth(`/api/products/${prodData.id}/crawl`, {
         method: "POST",
