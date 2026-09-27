@@ -194,14 +194,32 @@ export default function Home() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: aiModel })
         });
-        const campaignResData = await campaignResponse.json();
-        if (campaignResData) {
-          setCampaignId(campaignResData.id);
-          setCampaignData({
-            headline: campaignResData.headline,
-            about: campaignResData.about,
-            posts: campaignResData.posts
-          });
+        const campaignJob = await campaignResponse.json();
+        
+        // 3. Poll for completion
+        let isDone = false;
+        while (!isDone) {
+          await new Promise(r => setTimeout(r, 2000));
+          const jobRes = await fetchWithAuth(`/api/jobs/${campaignJob.job_id}`);
+          if (!jobRes.ok) continue;
+          const jobStatus = await jobRes.json();
+          if (jobStatus.status === 'COMPLETED' || jobStatus.status === 'FAILED') {
+            isDone = true;
+          }
+        }
+        
+        // 4. Fetch the generated campaign
+        const resultRes = await fetchWithAuth(`/api/products/${product.id}/campaign`);
+        if (resultRes.ok) {
+           const campaignResData = await resultRes.json();
+           setCampaignId(campaignResData.id);
+           setCampaignData({
+             headline: campaignResData.headline || "",
+             about: campaignResData.about || "",
+             posts: campaignResData.posts && Array.isArray(campaignResData.posts) 
+               ? campaignResData.posts.map((p: any) => p.body || p.topic || "") 
+               : []
+           });
         }
       } catch (err) {
         console.error("Campaign generation error", err);
