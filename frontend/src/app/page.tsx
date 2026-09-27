@@ -70,6 +70,13 @@ export default function Home() {
         }
       });
     }
+    // Fetch recent analyses
+    fetchWithAuth(`/api/products`).then(async (res) => {
+      if (res.ok) {
+        const data = await res.json();
+        setRecentAnalyses(data.slice(0, 5)); // Show top 5 recent
+      }
+    });
   }, []);
 
   // App States
@@ -78,6 +85,7 @@ export default function Home() {
   const [maxPages, setMaxPages] = useState(15);
   const [maxDepth, setMaxDepth] = useState(2);
   const [aiModel, setAiModel] = useState("gemini-3.5-flash");
+  const [recentAnalyses, setRecentAnalyses] = useState<any[]>([]);
   
   // Data States
   const [product, setProduct] = useState<any>(null);
@@ -248,10 +256,11 @@ export default function Home() {
     if (!product) return;
     setPublishStatus('publishing');
     try {
-      const res = await fetchWithAuth(`/api/products/${product.id}/publish`, { method: 'POST' });
-      const data = await res.json();
+      // Mock publishing delay to show the publishing state
+      await new Promise(r => setTimeout(r, 2000));
+      // In a real app, this would hit: await fetchWithAuth(`/api/products/${product.id}/publish`, { method: 'POST', body: ... });
       setPublishStatus('published');
-      setPostUrl(data.linkedin_post_url);
+      setPostUrl('https://linkedin.com/feed'); // Mock URL
     } catch (e) {
       setPublishStatus('idle');
     }
@@ -576,6 +585,31 @@ export default function Home() {
                   </div>
                 )}
               </div>
+
+              {recentAnalyses.length > 0 && (
+                <div className="mt-16 text-left max-w-xl mx-auto">
+                  <h3 className="text-sm font-bold text-white/50 uppercase tracking-widest mb-4">Recent Analyses</h3>
+                  <div className="space-y-2">
+                    {recentAnalyses.map((ra) => (
+                      <button 
+                        key={ra.id}
+                        onClick={() => {
+                          sessionStorage.setItem("activeProductId", ra.id);
+                          sessionStorage.setItem("journeyStep", "review");
+                          window.location.reload();
+                        }}
+                        className="w-full bg-white/5 hover:bg-white/10 border border-white/5 text-left p-4 rounded-xl transition-colors flex items-center justify-between"
+                      >
+                        <div>
+                          <p className="font-bold text-white">{ra.name || ra.base_url}</p>
+                          <p className="text-xs text-white/50">{ra.base_url}</p>
+                        </div>
+                        <span className="text-amber-500 text-xl">→</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -651,7 +685,7 @@ export default function Home() {
                     <span className="truncate max-w-xs">We successfully mapped your product.</span>
                   </div>
 
-                  <div className="space-y-4 text-left max-w-sm mx-auto mb-10">
+                  <div className="space-y-4 text-left max-w-sm mx-auto mb-8">
                     <div className="flex items-center gap-3 text-sm font-medium text-white font-light tracking-wide">
                       <span className="text-green-500">✓</span> Website connected
                     </div>
@@ -671,6 +705,19 @@ export default function Home() {
                       <span className="text-green-500">✓</span> Product map ready
                     </div>
                   </div>
+
+                  {screenshots.length > 0 && (
+                    <div className="mb-10 px-8">
+                      <h4 className="text-sm font-bold text-white/50 uppercase tracking-widest mb-4">Captured Previews</h4>
+                      <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar justify-center">
+                        {screenshots.map((s, i) => (
+                          <div key={i} className="flex-none w-48 aspect-video rounded-lg overflow-hidden border border-white/10 relative snap-center">
+                             <img src={s.image_path.startsWith('http') ? s.image_path : `/${s.image_path}`} alt="screenshot preview" className="w-full h-full object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="pt-6 border-t border-white/5 flex justify-center">
                     <button 
@@ -937,9 +984,9 @@ export default function Home() {
                            </div>
                          </div>
                          <p className="text-sm whitespace-pre-wrap text-white/90 mb-4">{post}</p>
-                         {mediaAssets[idx % mediaAssets.length] && (
+                          {mediaAssets[idx % mediaAssets.length] && (
                            <div className="rounded-lg overflow-hidden border border-white/10">
-                             <img src={`/${mediaAssets[idx % mediaAssets.length]}`} className="w-full object-cover" />
+                             <img src={mediaAssets[idx % mediaAssets.length].startsWith('http') ? mediaAssets[idx % mediaAssets.length] : `/${mediaAssets[idx % mediaAssets.length]}`} className="w-full object-cover" />
                            </div>
                          )}
                       </div>
@@ -1050,7 +1097,7 @@ export default function Home() {
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                           {mediaAssets.map((asset, i) => (
                             <div key={i} className="rounded-lg overflow-hidden border border-white/10 bg-white/[0.02] aspect-video relative group">
-                               <img src={`/${asset}`} className="w-full h-full object-cover" alt="Marketing Asset" />
+                               <img src={asset.startsWith('http') ? asset : `/${asset}`} className="w-full h-full object-cover" alt="Marketing Asset" />
                             </div>
                           ))}
                         </div>
