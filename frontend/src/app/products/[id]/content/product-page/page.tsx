@@ -17,31 +17,63 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
 }
 
 
+interface ProductPageData {
+  id?: string;
+  name?: string;
+  tagline?: string;
+  description?: string;
+  website?: string;
+  target_audience?: string;
+  highlights?: string;
+  logo_url?: string;
+  banner_url?: string;
+  downloadable_url?: string;
+  status?: string;
+}
+
+interface ScreenshotData {
+  id: string;
+  url: string;
+  created_at: string;
+}
+
 export default function ProductPageGenerator({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const unwrappedParams = use(params);
   const productId = unwrappedParams.id;
 
-  const [productPage, setProductPage] = useState<any>(null);
+  const [productPage, setProductPage] = useState<ProductPageData | null>(null);
+  const [screenshots, setScreenshots] = useState<ScreenshotData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Load existing or mock
   useEffect(() => {
-    fetchProductPage();
-  }, [productId]);
-
-  const fetchProductPage = async () => {
-    try {
-      const res = await fetchWithAuth(`/api/products/${productId}/product-page`);
-      if (res.ok) {
-        const data = await res.json();
-        setProductPage(data);
+    const fetchProductPage = async () => {
+      try {
+        const res = await fetchWithAuth(`/api/products/${productId}/product-page`);
+        if (res.ok) {
+          const data = await res.json();
+          setProductPage(data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch product page:", e);
       }
-    } catch (e) {
-      console.error(e);
-    }
-  };
+    };
+
+    const fetchScreenshots = async () => {
+      try {
+        const res = await fetchWithAuth(`/api/products/${productId}/screenshots`);
+        if (res.ok) {
+          setScreenshots(await res.json());
+        }
+      } catch (e) {
+        console.error("Failed to fetch screenshots:", e);
+      }
+    };
+
+    fetchProductPage();
+    fetchScreenshots();
+  }, [productId]);
 
   const generatePage = async () => {
     setIsGenerating(true);
@@ -63,7 +95,12 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
               const jobData = await jobRes.json();
               if (jobData.status === "succeeded") {
                 isDone = true;
-                await fetchProductPage();
+                // Poll again to get the final data
+                const finalRes = await fetchWithAuth(`/api/products/${productId}/product-page`);
+                if (finalRes.ok) {
+                  const finalData = await finalRes.json();
+                  setProductPage(finalData);
+                }
               } else if (jobData.status === "failed") {
                 console.error("Job failed:", jobData.error);
                 isDone = true;
@@ -277,6 +314,62 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
                   onChange={(e) => setProductPage({...productPage, highlights: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none" 
                 />
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <h3 className="font-bold text-gray-900 mb-4">Media Assets</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Logo URL</label>
+                    <input 
+                      type="text" 
+                      placeholder="https://example.com/logo.png"
+                      value={productPage?.logo_url || ""}
+                      onChange={(e) => setProductPage({...productPage, logo_url: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Banner URL</label>
+                    <input 
+                      type="text" 
+                      placeholder="https://example.com/banner.png"
+                      value={productPage?.banner_url || ""}
+                      onChange={(e) => setProductPage({...productPage, banner_url: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Downloadable Asset URL</label>
+                    <input 
+                      type="text" 
+                      placeholder="https://example.com/whitepaper.pdf"
+                      value={productPage?.downloadable_url || ""}
+                      onChange={(e) => setProductPage({...productPage, downloadable_url: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" 
+                    />
+                  </div>
+                </div>
+
+                {screenshots.length > 0 && (
+                  <div className="mt-8">
+                    <h4 className="font-bold text-gray-700 mb-3 text-sm">Available Screenshots</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      {screenshots.map((s) => (
+                        <div key={s.id} className="border border-gray-200 rounded-lg overflow-hidden flex flex-col shadow-sm">
+                          <div className="h-32 bg-gray-100 relative">
+                            <img src={s.url} alt="Screenshot" className="object-cover w-full h-full" />
+                          </div>
+                          <div className="p-3 flex flex-wrap gap-2 bg-gray-50 border-t border-gray-200">
+                            <button onClick={() => setProductPage({...productPage, logo_url: s.url})} className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded-md hover:bg-gray-100 font-medium transition-colors">Set Logo</button>
+                            <button onClick={() => setProductPage({...productPage, banner_url: s.url})} className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded-md hover:bg-gray-100 font-medium transition-colors">Set Banner</button>
+                            <button onClick={() => setProductPage({...productPage, downloadable_url: s.url})} className="text-xs bg-white border border-gray-300 px-3 py-1.5 rounded-md hover:bg-gray-100 font-medium transition-colors">Set Asset</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

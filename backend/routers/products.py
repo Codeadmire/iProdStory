@@ -364,9 +364,36 @@ def update_product_page(
     if not page:
         raise HTTPException(status_code=404, detail="Product page not found")
     for field in ("name", "tagline", "description", "website", "target_audience",
-                  "highlights", "status"):
+                  "highlights", "status", "logo_url", "banner_url", "downloadable_url"):
         if field in update:
             setattr(page, field, update[field])
     db.commit()
     db.refresh(page)
     return {k: v for k, v in page.__dict__.items() if not k.startswith("_")}
+
+
+@router.get("/{product_id}/screenshots")
+def get_product_screenshots(
+    product_id: str,
+    ctx: RequestContext = Depends(get_request_context),
+    db: Session = Depends(get_db),
+):
+    _require_product(product_id, ctx.workspace.id, db)
+    screenshots = db.query(models.PageScreenshot).filter(
+        models.PageScreenshot.product_id == product_id
+    ).order_by(models.PageScreenshot.created_at.desc()).all()
+    
+    # We must format the storage key into a valid media URL based on config
+    from config import settings
+    result = []
+    for s in screenshots:
+        url = s.storage_key
+        if not url.startswith("http"):
+            url = f"{settings.MEDIA_BASE_URL}/{s.storage_key}"
+            
+        result.append({
+            "id": s.id,
+            "url": url,
+            "created_at": s.created_at
+        })
+    return result

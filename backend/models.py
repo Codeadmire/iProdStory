@@ -276,6 +276,9 @@ class LinkedInProductPage(Base):
     website = Column(String, nullable=True)
     target_audience = Column(String, nullable=True)
     highlights = Column(Text, nullable=True)
+    logo_url = Column(String, nullable=True)
+    banner_url = Column(String, nullable=True)
+    downloadable_url = Column(String, nullable=True)
     status = Column(String, default="Draft")
     # Draft | In Review | Approved
     created_at = Column(DateTime(timezone=True), default=_now)
