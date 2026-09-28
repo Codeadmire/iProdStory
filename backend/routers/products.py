@@ -127,7 +127,8 @@ def get_product(
     ctx: RequestContext = Depends(get_request_context),
     db: Session = Depends(get_db),
 ):
-    return _require_product(product_id, ctx.workspace.id, db)
+    p = _require_product(product_id, ctx.workspace.id, db)
+    return {"id": p.id, "name": p.name, "base_url": p.base_url, "status": p.status, "created_at": str(p.created_at)}
 
 
 # ── Crawl ─────────────────────────────────────────────────────────────────────
