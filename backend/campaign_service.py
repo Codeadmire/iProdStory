@@ -185,7 +185,7 @@ def generate_linkedin_posts(product_id: str, db: Session, model_name: str, setti
         for p in created_posts
     ]
 
-def generate_linkedin_product_page(product_id: str, db: Session, model_name: str = "gemini-3.5-flash"):
+def generate_linkedin_product_page(product_id: str, db: Session, model_name: str = "gemini-2.0-flash"):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         return None

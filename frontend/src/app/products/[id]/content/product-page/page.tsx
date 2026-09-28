@@ -81,7 +81,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
       const res = await fetchWithAuth(`/api/products/${productId}/product-page`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "gemini-3.5-flash" })
+        body: JSON.stringify({ model: "gemini-2.0-flash" })
       });
       if (res.ok) {
         const data = await res.json();
@@ -103,6 +103,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
                 }
               } else if (jobData.status === "failed") {
                 console.error("Job failed:", jobData.error);
+                alert("Generation failed: " + jobData.error);
                 isDone = true;
               }
             } else {
