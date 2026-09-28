@@ -137,6 +137,13 @@ export default function Home() {
       setProduct(prodData);
       sessionStorage.setItem('activeProductId', prodData.id);
 
+      if (!prodData.is_new) {
+        setJourneyStep('review');
+        sessionStorage.setItem('journeyStep', 'review');
+        window.location.reload();
+        return;
+      }
+
       const crawlRes = await fetchWithAuth(`/api/products/${prodData.id}/crawl`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -444,9 +451,9 @@ export default function Home() {
           <div>
             <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">Workspace</h3>
             <ul className="space-y-1">
-              <li><button className="w-full text-left px-3 py-2 text-white/70 hover:bg-white/[0.02] rounded-md">Dashboard <span className="float-right text-[10px] bg-white/5 px-2 py-0.5 rounded text-white/40">Soon</span></button></li>
+              <li><Link href="/" className="block w-full text-left px-3 py-2 bg-amber-500/10 border-l-2 border-amber-500 text-amber-400 font-medium font-medium rounded-md">New Analysis</Link></li>
+              <li><Link href="/analyses" className="block w-full text-left px-3 py-2 text-white/70 hover:bg-white/[0.02] rounded-md">Analyses History</Link></li>
               <li><button className="w-full text-left px-3 py-2 text-white/70 hover:bg-white/[0.02] rounded-md">Products <span className="float-right text-[10px] bg-white/5 px-2 py-0.5 rounded text-white/40">Soon</span></button></li>
-              <li><button className="w-full text-left px-3 py-2 bg-amber-500/10 border-l-2 border-amber-500 text-amber-400 font-medium font-medium rounded-md">Analyses</button></li>
             </ul>
           </div>
           

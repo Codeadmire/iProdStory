@@ -85,6 +85,17 @@ def create_product(
     db: Session = Depends(get_db),
 ):
     clean_url = validate_crawl_url(body.url)
+    
+    # Check if product already exists in this workspace
+    existing_product = db.query(models.Product).filter(
+        models.Product.workspace_id == ctx.workspace.id,
+        models.Product.base_url == clean_url
+    ).first()
+    
+    if existing_product:
+        return {"id": existing_product.id, "name": existing_product.name, "base_url": existing_product.base_url,
+                "status": existing_product.status, "created_at": str(existing_product.created_at), "is_new": False}
+                
     product = models.Product(
         workspace_id=ctx.workspace.id,
         name=body.name or clean_url,
@@ -94,7 +105,7 @@ def create_product(
     db.commit()
     db.refresh(product)
     return {"id": product.id, "name": product.name, "base_url": product.base_url,
-            "status": product.status, "created_at": str(product.created_at)}
+            "status": product.status, "created_at": str(product.created_at), "is_new": True}
 
 
 @router.get("")
