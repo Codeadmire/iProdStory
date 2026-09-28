@@ -191,9 +191,11 @@ export default function AnalysesHistory() {
               </div>
             )}
           </div>
-        </main>
-      </div>
-      </div>
+        )}
+        </div>
+      </main>
     </div>
+  </div>
+</div>
   );
 }
