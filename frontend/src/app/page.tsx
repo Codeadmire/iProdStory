@@ -64,7 +64,7 @@ export default function Home() {
       fetchWithAuth(`/api/products/${savedProductId}`).then(async (res) => {
         if (res.ok) {
           const data = await res.json();
-          setProduct(data.product);
+          setProduct(data);
           if (data.crawl_job) setCrawlJob(data.crawl_job);
           setJourneyStep(sessionStorage.getItem("journeyStep") as any || 'review');
         }
