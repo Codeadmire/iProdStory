@@ -264,7 +264,8 @@ export default function AnalysesHistory() {
                         </span>
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                  </div>
+                  <div className="flex items-center gap-3">
                       <button
                         onClick={(e) => handleDeleteAnalysis(e, analysis.id)}
                         className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors"
