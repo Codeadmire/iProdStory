@@ -18,6 +18,8 @@ export default function AnalysesHistory() {
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isDeletingBulk, setIsDeletingBulk] = useState(false);
 
   useEffect(() => {
     fetchWithAuth(`/api/products`).then(async (res) => {
@@ -43,12 +45,35 @@ export default function AnalysesHistory() {
       const res = await fetchWithAuth(`/api/products/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setAnalyses(analyses.filter(a => a.id !== id));
+        setSelectedIds(prev => prev.filter(i => i !== id));
       } else {
         alert("Failed to delete analysis.");
       }
     } catch (err) {
       console.error(err);
       alert("Error deleting analysis.");
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} selected analyses? This action cannot be undone.`)) return;
+    setIsDeletingBulk(true);
+    let successCount = 0;
+    try {
+      for (const id of selectedIds) {
+        const res = await fetchWithAuth(`/api/products/${id}`, { method: 'DELETE' });
+        if (res.ok) successCount++;
+      }
+      setAnalyses(analyses.filter(a => !selectedIds.includes(a.id)));
+      setSelectedIds([]);
+      if (successCount < selectedIds.length) {
+        alert(`Deleted ${successCount}, but failed to delete ${selectedIds.length - successCount} analyses.`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting analyses.");
+    } finally {
+      setIsDeletingBulk(false);
     }
   };
 
@@ -170,13 +195,25 @@ export default function AnalysesHistory() {
               </div>
             ) : (
               <div className="flex flex-col gap-6">
-                <input 
-                  type="text" 
-                  placeholder="Filter by product name or URL..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors"
-                />
+                <div className="flex items-center gap-4">
+                  <input 
+                    type="text" 
+                    placeholder="Filter by product name or URL..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors"
+                  />
+                  {selectedIds.length > 0 && (
+                    <button 
+                      onClick={handleBulkDelete}
+                      disabled={isDeletingBulk}
+                      className="bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-medium px-4 py-3 rounded-xl transition-colors flex items-center gap-2 whitespace-nowrap"
+                    >
+                      <Trash2 size={16} />
+                      {isDeletingBulk ? "Deleting..." : `Delete Selected (${selectedIds.length})`}
+                    </button>
+                  )}
+                </div>
                 
                 {filteredAndSortedAnalyses.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">
@@ -184,14 +221,41 @@ export default function AnalysesHistory() {
                   </div>
                 ) : (
                   <div className="grid gap-4">
+                    <div className="flex items-center gap-3 px-6 py-2 bg-white/5 rounded-lg border border-white/10">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.length === filteredAndSortedAnalyses.length && filteredAndSortedAnalyses.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedIds(filteredAndSortedAnalyses.map((a: any) => a.id));
+                          else setSelectedIds([]);
+                        }}
+                        className="w-4 h-4 rounded border-white/20 bg-black/20 text-amber-500 focus:ring-amber-500/50"
+                      />
+                      <span className="text-sm font-medium text-gray-300">Select All</span>
+                    </div>
                     {filteredAndSortedAnalyses.map((analysis) => (
                   <div 
                     key={analysis.id} 
-                    className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all rounded-xl p-6 flex items-center justify-between group cursor-pointer"
+                    className={`bg-white/5 hover:bg-white/10 border ${selectedIds.includes(analysis.id) ? 'border-amber-500/50 bg-amber-500/5' : 'border-white/5'} hover:border-white/20 transition-all rounded-xl p-6 flex items-center justify-between group cursor-pointer`}
                     onClick={() => handleOpenAnalysis(analysis.id)}
                   >
-                    <div>
-                      <h3 className="text-lg font-bold text-white mb-1 group-hover:text-amber-400 transition-colors">{analysis.name || analysis.base_url}</h3>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center h-full" onClick={(e) => e.stopPropagation()}>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedIds.includes(analysis.id)}
+                          onChange={() => {
+                            if (selectedIds.includes(analysis.id)) {
+                              setSelectedIds(prev => prev.filter(i => i !== analysis.id));
+                            } else {
+                              setSelectedIds(prev => [...prev, analysis.id]);
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-white/20 bg-black/20 text-amber-500 focus:ring-amber-500/50 cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white mb-1 group-hover:text-amber-400 transition-colors">{analysis.name || analysis.base_url}</h3>
                       <p className="text-sm text-gray-400 flex items-center gap-4">
                         <span>{analysis.base_url}</span>
                         <span className="flex items-center gap-1">
