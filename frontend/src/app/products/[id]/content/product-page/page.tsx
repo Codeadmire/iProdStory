@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
-import { BriefcaseBusiness, Check, RefreshCw, Save, ArrowLeft, Loader2 } from "lucide-react";
+import { BriefcaseBusiness, Check, RefreshCw, Save, ArrowLeft, Loader2, Copy, X } from "lucide-react";
 
 
 
@@ -46,6 +46,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
   const [screenshots, setScreenshots] = useState<ScreenshotData[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchProductPage = async () => {
@@ -103,7 +104,7 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
                 }
               } else if (jobData.status === "failed") {
                 console.error("Job failed:", jobData.error);
-                alert("Generation failed: " + jobData.error);
+                setErrorMessage("Generation failed: " + jobData.error);
                 isDone = true;
               }
             } else {
@@ -112,8 +113,9 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
           }
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setErrorMessage("Network error: " + e.message);
     }
     setIsGenerating(false);
   };
@@ -139,7 +141,39 @@ export default function ProductPageGenerator({ params }: { params: Promise<{ id:
 
   if (!productPage && !isGenerating) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 relative">
+        {errorMessage && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-red-100">
+              <div className="bg-red-50 px-6 py-4 border-b border-red-100 flex items-center justify-between">
+                <h3 className="text-red-700 font-bold text-lg">Error Generated</h3>
+                <button onClick={() => setErrorMessage(null)} className="text-red-400 hover:text-red-600 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-6">
+                <div className="bg-gray-50 rounded-lg p-4 font-mono text-sm text-gray-700 max-h-64 overflow-y-auto break-all border border-gray-200">
+                  {errorMessage}
+                </div>
+              </div>
+              <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+                <button 
+                  onClick={() => setErrorMessage(null)}
+                  className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  Close
+                </button>
+                <button 
+                  onClick={() => navigator.clipboard.writeText(errorMessage)}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+                >
+                  <Copy size={16} />
+                  Copy Error Message
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="bg-white max-w-lg w-full rounded-2xl shadow-xl p-10 text-center">
           <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <BriefcaseBusiness size={40} />
