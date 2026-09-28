@@ -58,7 +58,10 @@ class S3StorageBackend(StorageBackend):
         self.bucket = bucket
         self.region = region
 
-        kwargs = {}
+        from botocore.client import Config
+        kwargs = {
+            'config': Config(signature_version='s3v4', s3={'addressing_style': 'path'})
+        }
         if endpoint_url:
             kwargs["endpoint_url"] = endpoint_url
         if aws_key and aws_secret:

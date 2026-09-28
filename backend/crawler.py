@@ -13,12 +13,14 @@ def normalize_url(url: str) -> str:
     parsed = urlparse(url)
     return f"{parsed.scheme}://{parsed.netloc}{parsed.path}".rstrip("/")
 
+from botocore.client import Config
 s3_client = boto3.client(
     's3',
     endpoint_url=os.getenv("AWS_ENDPOINT_URL_S3"),
     aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
     aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-    region_name=os.getenv("AWS_REGION", "us-east-2")
+    region_name=os.getenv("AWS_REGION", "us-east-2"),
+    config=Config(signature_version='s3v4', s3={'addressing_style': 'path'})
 )
 
 def is_same_domain(base_url: str, target_url: str) -> bool:
