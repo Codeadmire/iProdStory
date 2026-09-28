@@ -436,11 +436,30 @@ def get_product_screenshots(
         models.PageScreenshot.product_id == product_id
     ).order_by(models.PageScreenshot.created_at.desc()).all()
     
-    # If storage is local, return a root-relative URL so Next.js rewrites it via proxy
+    import os
+    import boto3
+    s3_client = None
+    if os.getenv("AWS_ENDPOINT_URL_S3"):
+        s3_client = boto3.client(
+            's3',
+            endpoint_url=os.getenv("AWS_ENDPOINT_URL_S3"),
+            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
+        )
+
     result = []
     for s in screenshots:
         url = s.storage_key
-        if not url.startswith("http"):
+        if s3_client and url:
+            try:
+                url = s3_client.generate_presigned_url(
+                    'get_object',
+                    Params={'Bucket': 'screenshots', 'Key': url},
+                    ExpiresIn=3600
+                )
+            except Exception:
+                pass
+        elif not url.startswith("http"):
             url = f"/screenshots/{s.storage_key}" if not s.storage_key.startswith("screenshots/") else f"/{s.storage_key}"
             
         result.append({
