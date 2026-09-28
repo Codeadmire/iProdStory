@@ -395,13 +395,12 @@ def get_product_screenshots(
         models.PageScreenshot.product_id == product_id
     ).order_by(models.PageScreenshot.created_at.desc()).all()
     
-    # We must format the storage key into a valid media URL based on config
-    from config import settings
+    # If storage is local, return a root-relative URL so Next.js rewrites it via proxy
     result = []
     for s in screenshots:
         url = s.storage_key
         if not url.startswith("http"):
-            url = f"{settings.MEDIA_BASE_URL}/{s.storage_key}"
+            url = f"/screenshots/{s.storage_key}" if not s.storage_key.startswith("screenshots/") else f"/{s.storage_key}"
             
         result.append({
             "id": s.id,
