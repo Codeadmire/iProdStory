@@ -145,16 +145,27 @@ def delete_product(
     for s in screenshots:
         try: storage.delete(s.storage_key)
         except Exception: pass
+    
+    # Delete from bottom of dependency tree up
+    campaign_ids = [c.id for c in db.query(models.Campaign.id).filter(models.Campaign.product_id == product_id).all()]
+    if campaign_ids:
+        db.query(models.SocialPost).filter(models.SocialPost.campaign_id.in_(campaign_ids)).delete(synchronize_session=False)
+        db.query(models.CampaignPost).filter(models.CampaignPost.campaign_id.in_(campaign_ids)).delete(synchronize_session=False)
         
-    db.query(models.PageScreenshot).filter(models.PageScreenshot.product_id == product_id).delete()
-    db.query(models.CrawledPage).filter(models.CrawledPage.product_id == product_id).delete()
-    db.query(models.CrawlJob).filter(models.CrawlJob.product_id == product_id).delete()
-    db.query(models.Feature).filter(models.Feature.product_id == product_id).delete()
-    db.query(models.Module).filter(models.Module.product_id == product_id).delete()
-    db.query(models.CampaignAsset).filter(models.CampaignAsset.product_id == product_id).delete()
-    db.query(models.AIUsage).filter(models.AIUsage.product_id == product_id).delete()
-    db.query(models.Campaign).filter(models.Campaign.product_id == product_id).delete()
-    db.query(models.LinkedInProductPage).filter(models.LinkedInProductPage.product_id == product_id).delete()
+    feature_ids = [f.id for f in db.query(models.Feature.id).filter(models.Feature.product_id == product_id).all()]
+    if feature_ids:
+        db.query(models.FeatureEvidence).filter(models.FeatureEvidence.feature_id.in_(feature_ids)).delete(synchronize_session=False)
+
+    db.query(models.CampaignAsset).filter(models.CampaignAsset.product_id == product_id).delete(synchronize_session=False)
+    db.query(models.PageScreenshot).filter(models.PageScreenshot.product_id == product_id).delete(synchronize_session=False)
+    db.query(models.CrawledPage).filter(models.CrawledPage.product_id == product_id).delete(synchronize_session=False)
+    db.query(models.CrawlJob).filter(models.CrawlJob.product_id == product_id).delete(synchronize_session=False)
+    db.query(models.Feature).filter(models.Feature.product_id == product_id).delete(synchronize_session=False)
+    db.query(models.Module).filter(models.Module.product_id == product_id).delete(synchronize_session=False)
+    db.query(models.AIUsage).filter(models.AIUsage.product_id == product_id).delete(synchronize_session=False)
+    db.query(models.AsyncJob).filter(models.AsyncJob.product_id == product_id).delete(synchronize_session=False)
+    db.query(models.Campaign).filter(models.Campaign.product_id == product_id).delete(synchronize_session=False)
+    db.query(models.LinkedInProductPage).filter(models.LinkedInProductPage.product_id == product_id).delete(synchronize_session=False)
     
     db.delete(p)
     db.commit()
