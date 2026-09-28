@@ -131,6 +131,36 @@ def get_product(
     return {"id": p.id, "name": p.name, "base_url": p.base_url, "status": p.status, "created_at": str(p.created_at)}
 
 
+@router.delete("/{product_id}")
+def delete_product(
+    product_id: str,
+    ctx: RequestContext = Depends(get_request_context),
+    db: Session = Depends(get_db),
+):
+    p = _require_product(product_id, ctx.workspace.id, db)
+    
+    # Delete associated screenshot files if possible
+    screenshots = db.query(models.PageScreenshot).filter(models.PageScreenshot.product_id == product_id).all()
+    from services.storage import storage
+    for s in screenshots:
+        try: storage.delete(s.storage_key)
+        except Exception: pass
+        
+    db.query(models.PageScreenshot).filter(models.PageScreenshot.product_id == product_id).delete()
+    db.query(models.CrawledPage).filter(models.CrawledPage.product_id == product_id).delete()
+    db.query(models.CrawlJob).filter(models.CrawlJob.product_id == product_id).delete()
+    db.query(models.Feature).filter(models.Feature.product_id == product_id).delete()
+    db.query(models.Module).filter(models.Module.product_id == product_id).delete()
+    db.query(models.CampaignAsset).filter(models.CampaignAsset.product_id == product_id).delete()
+    db.query(models.AIUsage).filter(models.AIUsage.product_id == product_id).delete()
+    db.query(models.Campaign).filter(models.Campaign.product_id == product_id).delete()
+    db.query(models.LinkedInProductPage).filter(models.LinkedInProductPage.product_id == product_id).delete()
+    
+    db.delete(p)
+    db.commit()
+    return {"status": "deleted"}
+
+
 # ── Crawl ─────────────────────────────────────────────────────────────────────
 
 @router.post("/{product_id}/crawl", response_model=JobAccepted, status_code=202)

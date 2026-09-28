@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, LogOut, ArrowRight, Clock, Plus } from "lucide-react";
+import { User, LogOut, ArrowRight, Clock, Plus, Trash2 } from "lucide-react";
 
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -33,6 +33,23 @@ export default function AnalysesHistory() {
     localStorage.removeItem("token");
     localStorage.removeItem("workspace_id");
     router.push("/login");
+  };
+
+  const handleDeleteAnalysis = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this analysis? This action cannot be undone.")) return;
+    
+    try {
+      const res = await fetchWithAuth(`/api/products/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setAnalyses(analyses.filter(a => a.id !== id));
+      } else {
+        alert("Failed to delete analysis.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error deleting analysis.");
+    }
   };
 
   const handleOpenAnalysis = (id: string) => {
@@ -183,8 +200,17 @@ export default function AnalysesHistory() {
                         </span>
                       </p>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-amber-500 group-hover:bg-amber-500/20 transition-colors">
-                      <ArrowRight size={20} />
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={(e) => handleDeleteAnalysis(e, analysis.id)}
+                        className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                        title="Delete Analysis"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                      <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-amber-500 group-hover:bg-amber-500/20 transition-colors">
+                        <ArrowRight size={20} />
+                      </div>
                     </div>
                   </div>
                 ))}
