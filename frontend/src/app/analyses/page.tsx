@@ -17,6 +17,7 @@ export default function AnalysesHistory() {
   const router = useRouter();
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchWithAuth(`/api/products`).then(async (res) => {
@@ -39,6 +40,13 @@ export default function AnalysesHistory() {
     sessionStorage.setItem("journeyStep", "review");
     router.push("/");
   };
+
+  const filteredAndSortedAnalyses = analyses
+    .filter(a => 
+      (a.name && a.name.toLowerCase().includes(searchQuery.toLowerCase())) || 
+      (a.base_url && a.base_url.toLowerCase().includes(searchQuery.toLowerCase()))
+    )
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
   return (
     <div className="flex h-screen bg-[#06040A] text-white font-light tracking-wide font-sans overflow-hidden relative">
@@ -144,8 +152,22 @@ export default function AnalysesHistory() {
                 </Link>
               </div>
             ) : (
-              <div className="grid gap-4">
-                {analyses.map((analysis) => (
+              <div className="flex flex-col gap-6">
+                <input 
+                  type="text" 
+                  placeholder="Filter by product name or URL..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500/50 transition-colors"
+                />
+                
+                {filteredAndSortedAnalyses.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    No analyses match your search.
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {filteredAndSortedAnalyses.map((analysis) => (
                   <div 
                     key={analysis.id} 
                     className="bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all rounded-xl p-6 flex items-center justify-between group cursor-pointer"
@@ -157,7 +179,7 @@ export default function AnalysesHistory() {
                         <span>{analysis.base_url}</span>
                         <span className="flex items-center gap-1">
                           <Clock size={12} />
-                          {new Date(analysis.created_at).toLocaleDateString()}
+                          {new Date(analysis.created_at).toLocaleString()}
                         </span>
                       </p>
                     </div>
